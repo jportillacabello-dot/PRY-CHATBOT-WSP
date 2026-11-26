@@ -19,7 +19,7 @@
     {
       "id": "feat-002",
       "name": "Fase 2 – Cadena RAG",
-      "description": "prompt.txt con las reglas (solo el negocio, decir 'no sé') y rag.py con responder(pregunta) -> str usando el retriever de ChromaDB y gpt-5-mini. Terminado con ≥ 18/20 correctas en consola. Responsable: Jhonatan. Fecha: 1–3 dic.",
+      "description": "prompt.txt con las reglas (solo el negocio, decir 'no sé') y rag.py con responder(pregunta) -> str usando el retriever de ChromaDB y gpt-5-mini. Guardrails: umbral de relevancia (si ningún fragmento lo supera, responde 'no tengo esa información' sin llamar al LLM) y prompt que no sigue instrucciones del cliente ni revela sus reglas. Terminado con ≥ 18/20 correctas en consola. Responsable: Jhonatan. Fecha: 1–3 dic.",
       "dependencies": ["feat-001"],
       "status": "not-started",
       "evidence": ""
@@ -35,7 +35,7 @@
     {
       "id": "feat-004",
       "name": "Fase 4 – Calidad",
-      "description": "Log en data/log_preguntas.csv (número anonimizado), try/except con mensaje amable, validación de X-Twilio-Signature, respuestas cortas y evaluación ≥ 18/20 por WhatsApp. Responsable: Jenner. Fecha: 7–8 dic.",
+      "description": "Log en data/log_preguntas.csv (número anonimizado), try/except y timeout con mensaje de respaldo, validación de X-Twilio-Signature, filtro de entrada (solo texto, máximo 500 caracteres), límite de 10 mensajes por minuto por número, respuestas cortas y evaluación ≥ 18/20 por WhatsApp. Responsable: Jenner. Fecha: 7–8 dic.",
       "dependencies": ["feat-002", "feat-003"],
       "status": "not-started",
       "evidence": ""
