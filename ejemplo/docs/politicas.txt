@@ -1,0 +1,17 @@
+POLÍTICAS DE PEDIDOS – PASTELERÍA DULCE AROMA
+(Negocio ficticio, solo para probar el chatbot.)
+
+1. Cancelaciones
+Un pedido se puede cancelar hasta 24 horas antes de la fecha de entrega y se devuelve el 100 % del adelanto. Si se cancela con menos de 24 horas, el adelanto no se devuelve porque los insumos ya fueron comprados.
+
+2. Cambios en tortas personalizadas
+Los cambios de diseño, sabor o tamaño se aceptan hasta 48 horas antes de la entrega. Después de ese plazo no se pueden hacer cambios.
+
+3. Reclamos
+Los reclamos por producto en mal estado se reciben el mismo día de la compra, presentando la boleta y el producto. Se repone el producto o se devuelve el dinero. Contamos con Libro de Reclamaciones físico y virtual.
+
+4. Pedidos corporativos
+Para pedidos de más de 50 unidades (empresas, eventos) se ofrece un descuento del 10 %. Se piden con 5 días hábiles de anticipación al correo pedidos@dulcearoma.example.
+
+5. Comprobantes
+Emitimos boleta o factura electrónica. Para factura se necesita el RUC al momento del pago.

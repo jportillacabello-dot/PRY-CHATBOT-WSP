@@ -13,8 +13,8 @@
       "name": "Fase 1 – Ingesta",
       "description": "ingesta.py carga los documentos, los corta en chunks (~800 caracteres), genera embeddings con text-embedding-3-small y los guarda en /chroma_db. Terminado cuando la búsqueda trae el fragmento correcto para las 20 preguntas de prueba. Responsable: Jhonatan. Fecha: 28–30 nov.",
       "dependencies": ["feat-000"],
-      "status": "not-started",
-      "evidence": ""
+      "status": "in-progress",
+      "evidence": "2026-11-26: ingesta.py hecho y probado con el negocio de ejemplo (ejemplo/docs) y embeddings falsos: 9 tests OK. Falta: correr con OpenAI (.env) y la tarea 1.3 con las 20 preguntas."
     },
     {
       "id": "feat-002",
@@ -51,7 +51,7 @@
     {
       "id": "feat-006",
       "name": "Fase 6 – Cierre",
-      "description": "README final con instalación y diagramas C1/C2, video demo de 1–2 min y comparación de costos reales vs. presupuesto. Último paso: sacar CLAUDE.md del repo (agregarlo a .gitignore y git rm --cached CLAUDE.md). Responsable: Jenner (Jhonatan apoya en la demo). Fecha: 11 dic.",
+      "description": "README final con instalación y diagramas C1/C2, video demo de 1–2 min y comparación de costos reales vs. presupuesto. Último paso: sacar CLAUDE.md del repo y de su historial (.gitignore + git filter-repo + push --force, avisando a Jenner; ver CLAUDE.md). Responsable: Jenner (Jhonatan apoya en la demo). Fecha: 11 dic.",
       "dependencies": ["feat-005"],
       "status": "not-started",
       "evidence": ""
