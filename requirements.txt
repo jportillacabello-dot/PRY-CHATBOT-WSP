@@ -9,6 +9,7 @@ langchain-community
 chromadb
 openai
 python-dotenv
+pyyaml
 pypdf
 docx2txt
 pytest

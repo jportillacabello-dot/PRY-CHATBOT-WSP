@@ -11,32 +11,41 @@
     {
       "id": "feat-001",
       "name": "Fase 1 – Ingesta",
-      "description": "ingesta.py carga los documentos, los corta en chunks (~800 caracteres), genera embeddings con text-embedding-3-small y los guarda en /chroma_db. Terminado cuando la búsqueda trae el fragmento correcto para las 20 preguntas de prueba. Responsable: Jhonatan. Fecha: 28–30 nov.",
-      "dependencies": ["feat-000"],
+      "description": "src/ingestion, src/chunking, src/embeddings y src/vectordb, orquestados por src/pipeline/ingest_pipeline.py (python main.py ingestar): cargan los documentos, los cortan en chunks (~800 caracteres), generan embeddings con text-embedding-3-small y los guardan en chroma_db/. Terminado cuando la búsqueda trae el fragmento correcto para las 20 preguntas de prueba (python main.py probar-busqueda). Responsable: Jhonatan. Fecha: 28–30 nov.",
+      "dependencies": [
+        "feat-000"
+      ],
       "status": "in-progress",
-      "evidence": "2026-11-26: ingesta.py hecho y probado con el negocio de ejemplo (ejemplo/docs) y embeddings falsos: 9 tests OK. Ingesta real con OpenAI OK (3 archivos, 5 fragmentos). Tarea 1.3 como script (probar_busqueda.py): fuente correcta en top-4 en 18/18 con el ejemplo (poco exigente con solo 5 fragmentos). Falta: repetirla con los documentos y preguntas reales y calibrar el umbral."
+      "evidence": "2026-11-26: ingesta.py hecho y probado con el negocio de ejemplo (ejemplo/docs) y embeddings falsos: 9 tests OK. Ingesta real con OpenAI OK (3 archivos, 5 fragmentos). Tarea 1.3 como script (probar_busqueda.py): fuente correcta en top-4 en 18/18 con el ejemplo (poco exigente con solo 5 fragmentos). Falta: repetirla con los documentos y preguntas reales y calibrar el umbral. 2026-11-26 (estructura por carpetas): python main.py ingestar --docs ejemplo/docs y probar-busqueda dan el mismo resultado (5 fragmentos, 18/18)."
     },
     {
       "id": "feat-002",
       "name": "Fase 2 – Cadena RAG",
-      "description": "prompt.txt con las reglas (solo el negocio, decir 'no sé') y rag.py con responder(pregunta) -> str usando el retriever de ChromaDB y gpt-5-mini. Guardrails: umbral de relevancia (si ningún fragmento lo supera, responde 'no tengo esa información' sin llamar al LLM) y prompt que no sigue instrucciones del cliente ni revela sus reglas. Terminado con ≥ 18/20 correctas en consola. Responsable: Jhonatan. Fecha: 1–3 dic.",
-      "dependencies": ["feat-001"],
+      "description": "src/prompts/system_prompt.txt con las reglas (solo el negocio, decir 'no sé'), src/retrieval (búsqueda y umbral), src/llm (gpt-5-mini) y src/pipeline/rag_pipeline.py con responder(pregunta) -> str. Guardrails: umbral de relevancia (si ningún fragmento lo supera, responde 'no tengo esa información' sin llamar al LLM) y prompt que no sigue instrucciones del cliente ni revela sus reglas. Terminado con ≥ 18/20 correctas en consola (python main.py preguntar --csv data/preguntas_prueba.csv). Responsable: Jhonatan. Fecha: 1–3 dic.",
+      "dependencies": [
+        "feat-001"
+      ],
       "status": "in-progress",
-      "evidence": "2026-11-26: prompt.txt y rag.py (responder, umbral 0.75, gpt-5-mini con reasoning_effort minimal, timeout 10 s) hechos. Ejemplo: 20/20 correctas en dos corridas seguidas (python rag.py --csv ejemplo/preguntas_prueba.csv), promedio 1.7 s, máximo 4.2 s; 4/4 intentos de manipulación rechazados. 22 tests OK. Falta: repetir con las 20 preguntas reales."
+      "evidence": "2026-11-26: prompt.txt y rag.py (responder, umbral 0.75, gpt-5-mini con reasoning_effort minimal, timeout 10 s) hechos. Ejemplo: 20/20 correctas en dos corridas seguidas (python rag.py --csv ejemplo/preguntas_prueba.csv), promedio 1.7 s, máximo 4.2 s; 4/4 intentos de manipulación rechazados. 22 tests OK. Falta: repetir con las 20 preguntas reales. 2026-11-26 (estructura por carpetas): python main.py preguntar --csv ejemplo/preguntas_prueba.csv: 20/20, máximo 3.3 s; 48 tests OK."
     },
     {
       "id": "feat-003",
       "name": "Fase 3 – WhatsApp",
-      "description": "app.py con FastAPI y POST /whatsapp: lee Body, llama a responder() y devuelve TwiML. Twilio Sandbox + ngrok configurados. Terminado cuando el bot responde desde el celular. Se puede empezar con una respuesta fija antes de que exista rag.py. Responsable: Jenner. Fecha: 4–6 dic.",
-      "dependencies": ["feat-000"],
+      "description": "src/api/routes.py con FastAPI y POST /whatsapp: lee Body, llama a src.pipeline.rag_pipeline.responder() (ya existe) y devuelve TwiML. Se levanta con uvicorn src.api.routes:app. Twilio Sandbox + ngrok configurados. Terminado cuando el bot responde desde el celular. Responsable: Jenner. Fecha: 4–6 dic.",
+      "dependencies": [
+        "feat-000"
+      ],
       "status": "not-started",
       "evidence": ""
     },
     {
       "id": "feat-004",
       "name": "Fase 4 – Calidad",
-      "description": "Log en data/log_preguntas.csv (número anonimizado), try/except y timeout con mensaje de respaldo, validación de X-Twilio-Signature, filtro de entrada (solo texto, máximo 500 caracteres), límite de 10 mensajes por minuto por número, respuestas cortas y evaluación ≥ 18/20 por WhatsApp. Responsable: Jenner. Fecha: 7–8 dic.",
-      "dependencies": ["feat-002", "feat-003"],
+      "description": "Log en logs/log_preguntas.csv (número anonimizado), try/except y timeout con mensaje de respaldo, validación de X-Twilio-Signature, filtro de entrada (solo texto, máximo 500 caracteres), límite de 10 mensajes por minuto por número, respuestas cortas y evaluación ≥ 18/20 por WhatsApp. Responsable: Jenner. Fecha: 7–8 dic.",
+      "dependencies": [
+        "feat-002",
+        "feat-003"
+      ],
       "status": "not-started",
       "evidence": ""
     },
@@ -44,7 +53,9 @@
       "id": "feat-005",
       "name": "Fase 5 – Despliegue",
       "description": "Web Service en Render conectado a GitHub, variables de entorno cargadas, ChromaDB persistida (disco de pago o ingesta al arrancar) y webhook de Twilio apuntando a Render. Terminado cuando las 20 preguntas funcionan con la PC apagada. Responsable: Jenner. Fecha: 9–10 dic.",
-      "dependencies": ["feat-004"],
+      "dependencies": [
+        "feat-004"
+      ],
       "status": "not-started",
       "evidence": ""
     },
@@ -52,7 +63,9 @@
       "id": "feat-006",
       "name": "Fase 6 – Cierre",
       "description": "README final con instalación y diagramas C1/C2, video demo de 1–2 min y comparación de costos reales vs. presupuesto. Último paso: sacar CLAUDE.md y .claude/ del repo y de su historial (.gitignore + git filter-repo + push --force, avisando a Jenner; ver CLAUDE.md). Responsable: Jenner (Jhonatan apoya en la demo). Fecha: 11 dic.",
-      "dependencies": ["feat-005"],
+      "dependencies": [
+        "feat-005"
+      ],
       "status": "not-started",
       "evidence": ""
     }

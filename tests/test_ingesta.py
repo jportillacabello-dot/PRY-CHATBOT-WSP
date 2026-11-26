@@ -1,4 +1,7 @@
-"""Tests de ingesta.py. Usan embeddings falsos: no llaman a OpenAI ni cuestan nada."""
+"""Tests de la ingesta (ingestion, chunking, vectordb, pipeline de ingesta).
+
+Usan embeddings falsos: no llaman a OpenAI ni cuestan nada.
+"""
 
 import zipfile
 from pathlib import Path
@@ -6,7 +9,11 @@ from pathlib import Path
 import pytest
 from langchain_core.embeddings import DeterministicFakeEmbedding
 
-import ingesta
+import main
+from src.chunking.chunker import trocear
+from src.ingestion.loader import cargar_documentos, limpiar_paginas
+from src.pipeline.ingest_pipeline import ingestar
+from src.vectordb.vector_store import construir_base
 
 RAIZ = Path(__file__).resolve().parent.parent
 EJEMPLO = RAIZ / "ejemplo" / "docs"
@@ -35,21 +42,19 @@ def test_limpieza_quita_encabezados_pies_y_numeros_de_pagina():
         f"PASTELERÍA DULCE AROMA\nContenido de la página {n}\nPágina {n} de 4"
         for n in range(1, 5)
     ]
-    limpias = ingesta.limpiar_paginas(paginas)
-    assert limpias == [f"Contenido de la página {n}" for n in range(1, 5)]
+    assert limpiar_paginas(paginas) == [f"Contenido de la página {n}" for n in range(1, 5)]
 
 
 def test_limpieza_no_toca_documentos_cortos():
     # Con menos de 3 páginas no se puede saber qué es encabezado.
-    assert ingesta.limpiar_paginas(["Título\nTexto  con   espacios"]) == ["Título\nTexto con espacios"]
+    assert limpiar_paginas(["Título\nTexto  con   espacios"]) == ["Título\nTexto con espacios"]
 
 
 # ------------------------------------------------------------------ carga
 
 def test_carga_los_documentos_de_ejemplo():
-    documentos = ingesta.cargar_documentos(EJEMPLO)
-    fuentes = {d.metadata["fuente"] for d in documentos}
-    assert fuentes == {"faq.md", "politicas.txt", "carta.pdf"}
+    documentos = cargar_documentos(EJEMPLO)
+    assert {d.metadata["fuente"] for d in documentos} == {"faq.md", "politicas.txt", "carta.pdf"}
     carta = next(d for d in documentos if d.metadata["fuente"] == "carta.pdf")
     assert "Capuchino" in carta.page_content
     assert carta.metadata["pagina"] == 1
@@ -59,21 +64,20 @@ def test_carga_docx_e_ignora_formatos_no_soportados(tmp_path):
     _crear_docx(tmp_path / "horarios.docx", "Abrimos a las 8")
     (tmp_path / "precios.xlsx").write_bytes(b"no soportado")
     (tmp_path / ".gitkeep").write_text("")
-    documentos = ingesta.cargar_documentos(tmp_path)
+    documentos = cargar_documentos(tmp_path)
     assert [d.metadata["fuente"] for d in documentos] == ["horarios.docx"]
     assert "Abrimos a las 8" in documentos[0].page_content
 
 
 def test_carpeta_inexistente_da_error_claro(tmp_path):
     with pytest.raises(FileNotFoundError):
-        ingesta.cargar_documentos(tmp_path / "no-existe")
+        cargar_documentos(tmp_path / "no-existe")
 
 
 # --------------------------------------------------------------- troceado
 
 def test_trocear_respeta_el_tamano_y_numera_fragmentos():
-    documentos = ingesta.cargar_documentos(EJEMPLO)
-    fragmentos = ingesta.trocear(documentos, chunk_size=300, chunk_overlap=30)
+    fragmentos = trocear(cargar_documentos(EJEMPLO), chunk_size=300, chunk_overlap=30)
     assert all(len(f.page_content) <= 300 for f in fragmentos)
     faq = [f.metadata["fragmento"] for f in fragmentos if f.metadata["fuente"] == "faq.md"]
     assert faq == list(range(len(faq))) and len(faq) > 1
@@ -82,11 +86,11 @@ def test_trocear_respeta_el_tamano_y_numera_fragmentos():
 # ---------------------------------------------------------- base vectorial
 
 def test_construir_base_es_idempotente(tmp_path, embeddings):
-    fragmentos = ingesta.trocear(ingesta.cargar_documentos(EJEMPLO))
+    fragmentos = trocear(cargar_documentos(EJEMPLO))
     destino = tmp_path / "chroma_db"
 
-    ingesta.construir_base(fragmentos, embeddings, destino)
-    base = ingesta.construir_base(fragmentos, embeddings, destino)  # segunda corrida
+    construir_base(fragmentos, embeddings, destino)
+    base = construir_base(fragmentos, embeddings, destino)  # segunda corrida
 
     assert base._collection.count() == len(fragmentos)  # sin duplicados
     assert base._collection.metadata["hnsw:space"] == "cosine"
@@ -94,9 +98,15 @@ def test_construir_base_es_idempotente(tmp_path, embeddings):
     assert len(resultado) == 2 and "fuente" in resultado[0].metadata
 
 
-def test_main_sin_api_key_falla_con_mensaje(monkeypatch, tmp_path, capsys):
+def test_pipeline_de_ingesta_completo(tmp_path, embeddings):
+    preparado = ingestar(EJEMPLO, tmp_path / "db", embeddings=embeddings)
+    assert preparado.archivos == 3 and preparado.fragmentos
+    assert (tmp_path / "db" / "chroma.sqlite3").exists()
+
+
+def test_main_ingestar_sin_api_key_falla_con_mensaje(monkeypatch, tmp_path, capsys):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: False)
-    codigo = ingesta.main(["--docs", str(EJEMPLO), "--destino", str(tmp_path / "db")])
+    codigo = main.main(["ingestar", "--docs", str(EJEMPLO), "--destino", str(tmp_path / "db")])
     assert codigo == 1
     assert "OPENAI_API_KEY" in capsys.readouterr().out

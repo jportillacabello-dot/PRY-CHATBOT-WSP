@@ -1,0 +1,40 @@
+# Configuración del chatbot RAG. Las claves van en .env, nunca aquí.
+# Las rutas son relativas a la raíz del proyecto.
+
+rutas:
+  docs: docs                          # documentos del negocio (se ingesta todo)
+  chroma: chroma_db                   # base vectorial generada
+  preguntas: data/preguntas_prueba.csv
+  logs: logs
+
+ingesta:
+  chunk_size: 800                     # caracteres por fragmento
+  chunk_overlap: 100                  # caracteres compartidos entre fragmentos vecinos
+  extensiones: [.pdf, .docx, .txt, .md]
+
+embeddings:
+  modelo: text-embedding-3-small
+  costo_por_millon: 0.02              # USD por 1M tokens (para el costo aproximado)
+
+vectordb:
+  coleccion: negocio
+  distancia: cosine                   # el umbral de retrieval se mide con esta distancia
+
+retrieval:
+  k: 4                                # fragmentos por pregunta
+  umbral_distancia: 0.75              # calibrar con: python main.py probar-busqueda
+
+llm:
+  modelo: gpt-5-mini
+  reasoning_effort: minimal
+  max_tokens: 600
+  timeout: 10                         # segundos; Twilio corta el webhook a los 15
+  max_retries: 1
+
+mensajes:
+  sin_info: "Lo siento, no tengo esa información."
+  vacio: "¡Hola! Escríbeme tu consulta y te ayudo."
+
+evaluacion:
+  meta_acierto: 0.9                   # 18 de 20
+  margen_umbral: 0.05

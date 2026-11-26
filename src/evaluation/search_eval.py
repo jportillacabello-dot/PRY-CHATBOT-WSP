@@ -1,11 +1,7 @@
-"""Tarea 1.3: ¿la búsqueda trae el fragmento correcto para cada pregunta de prueba?
+"""Evaluación de la búsqueda (tarea 1.3): ¿trae el fragmento correcto?
 
 No llama al LLM: solo mide la búsqueda en ChromaDB y sugiere un umbral de
-relevancia para rag.py.
-
-Uso:
-    python src/probar_busqueda.py                                  # data/preguntas_prueba.csv
-    python src/probar_busqueda.py --preguntas ejemplo/preguntas_prueba.csv --k 3
+relevancia. Se corre con: python main.py probar-busqueda
 
 El CSV necesita las columnas `pregunta` y `fuente_esperada` (nombre del archivo
 donde está la respuesta; vacía si la respuesta no está en los documentos).
@@ -19,25 +15,22 @@ Pasos:
 
 from __future__ import annotations
 
-import argparse
 import csv
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 from langchain_chroma import Chroma
 
-import ingesta
-import rag
+from src.retrieval.retriever import K, UMBRAL_DISTANCIA, buscar
+from src.utils.config import CONFIG
 
 
 # =====================================================================
-# == CONFIGURACIÓN: archivo de preguntas, meta y margen del umbral ==
+# == CONFIGURACIÓN: meta y margen del umbral ==
 # =====================================================================
 
-PREGUNTAS = ingesta.RAIZ / "data" / "preguntas_prueba.csv"
-META_ACIERTO = 0.9  # 18 de 20
-MARGEN_UMBRAL = 0.05
+META_ACIERTO = CONFIG["evaluacion"]["meta_acierto"]  # 0.9 = 18 de 20
+MARGEN_UMBRAL = CONFIG["evaluacion"]["margen_umbral"]
 
 
 @dataclass
@@ -74,10 +67,10 @@ def leer_preguntas(ruta: Path) -> list[dict]:
 # == PASO 2: Buscar — los K fragmentos de cada pregunta ==
 # =====================================================================
 
-def evaluar(filas: list[dict], base: Chroma, k: int = rag.K) -> list[Resultado]:
+def evaluar(filas: list[dict], base: Chroma, k: int = K) -> list[Resultado]:
     resultados = []
     for fila in filas:
-        encontrados = rag.buscar(fila["pregunta"], base, k)  # misma búsqueda que usa el bot
+        encontrados = buscar(fila["pregunta"], base, k)  # misma búsqueda que usa el bot
         resultados.append(
             Resultado(
                 pregunta=fila["pregunta"].strip(),
@@ -150,39 +143,8 @@ def imprimir_informe(resultados: list[Resultado], k: int) -> bool:
     # 4.4 Umbral sugerido (PASO 3) y qué preguntas tendrá que cubrir el prompt
     umbral, separa = sugerir_umbral(resultados)
     if umbral is not None:
-        print(f"Umbral sugerido para rag.py: {umbral} (actual: {rag.UMBRAL_DISTANCIA})")
+        print(f"Umbral sugerido (retrieval.umbral_distancia en config.yaml): {umbral} (actual: {UMBRAL_DISTANCIA})")
         if not separa and sin_respuesta:
             debajo = [r.pregunta for r in sin_respuesta if r.distancia <= umbral]
             print(f"  El umbral no filtra {len(debajo)} pregunta(s) sin respuesta; las debe cubrir el prompt: {debajo}")
     return cumple
-
-
-# =====================================================================
-# == EJECUCIÓN: correr los pasos 1 a 4 desde la consola ==
-# =====================================================================
-
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Mide si la búsqueda trae el fragmento correcto.")
-    parser.add_argument("--preguntas", type=Path, default=PREGUNTAS)
-    parser.add_argument("--k", type=int, default=rag.K)
-    args = parser.parse_args(argv)
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")
-
-    try:
-        # PASO 1: leer preguntas
-        filas = leer_preguntas(args.preguntas)
-        if not filas:
-            print(f"ERROR: {ingesta.mostrar(args.preguntas)} no tiene preguntas. Complétalo o usa --preguntas ejemplo/preguntas_prueba.csv")
-            return 1
-        # PASO 2: buscar cada pregunta
-        resultados = evaluar(filas, rag.abrir_base(), args.k)
-    except (FileNotFoundError, ValueError, RuntimeError) as error:
-        print(f"ERROR: {error}")
-        return 1
-    # PASOS 3 y 4: umbral e informe (código de salida 1 si no se cumple la meta)
-    return 0 if imprimir_informe(resultados, args.k) else 1
-
-
-if __name__ == "__main__":
-    sys.exit(main())

@@ -24,39 +24,40 @@
 - [x] probar_busqueda.py (tarea 1.3): % de fuente correcta en top-k, rangos de distancia y umbral sugerido; sale con código 1 si no llega a 90 %
 - [x] prompt.txt (reglas) y rag.py: responder(pregunta) -> str, responder_con_detalle() para evaluar, umbral de relevancia, CLI con --csv
 - [x] tests/test_rag.py y tests/test_capas.py: 22 tests en total con LLM y embeddings falsos
+- [x] Guía general reutilizable: instrucciones/estructura-proyecto-rag.md
+- [x] Estructura por carpetas aplicada: main.py, config.yaml, src/{ingestion,chunking,embeddings,vectordb,retrieval,prompts,llm,pipeline,evaluation,api,utils}, logs/. 48 tests OK; mismo resultado con OpenAI (18/18 búsqueda, 20/20 respuestas, máximo 3.3 s)
 
 ### Qué está en curso (What's In Progress)
 
 - [ ] Fase 0 – Preparación (Jenner, 26–27 nov)
   - Falta: elegir el negocio, documentos en docs/, las 20 preguntas, cuentas y claves en .env
 - [ ] Fases 1 y 2 (Jhonatan): código terminado y validado con el ejemplo
-  - Falta: con los documentos reales, correr `python src/ingesta.py`, `python src/probar_busqueda.py` (ajustar UMBRAL_DISTANCIA en src/rag.py) y `python src/rag.py --csv data/preguntas_prueba.csv` (meta ≥ 18/20)
+  - Falta: con los documentos reales, correr `python main.py ingestar`, `python main.py probar-busqueda` (ajustar `retrieval.umbral_distancia` en config.yaml) y `python main.py preguntar --csv data/preguntas_prueba.csv` (meta ≥ 18/20, dos corridas)
   - Bloqueos: tarea 0.1 de Jenner
 
 ### Qué sigue (What's Next)
 
-1. Avisar a Jenner que `responder(pregunta) -> str` ya existe en rag.py: puede conectar app.py directamente (sin respuesta fija). Las excepciones las captura app.py
-2. Jenner: tarea 0.1 (negocio, documentos, 20 preguntas); al llegar, correr `python src/ingesta.py` sobre docs/. app.py va en src/ y se levanta con `uvicorn app:app --app-dir src`
+1. Avisar a Jenner que `responder(pregunta) -> str` ya existe en `src/pipeline/rag_pipeline.py`: su webhook va en `src/api/routes.py` (instrucciones en `src/api/__init__.py`) y se levanta con `uvicorn src.api.routes:app`. Las excepciones las captura api/
+2. Jenner: tarea 0.1 (negocio, documentos, 20 preguntas); al llegar, correr `python main.py ingestar`
 3. Jhonatan: invitar a Jenner como colaborador en GitHub
 
 ## Bloqueos / Riesgos (Blockers / Risks)
 
 - [ ] Twilio corta el webhook a los 15 s: vigilar la latencia de gpt-5-mini
 - [ ] El disco persistente de Render solo existe en planes de pago: en Free hay que correr la ingesta al arrancar
-- [ ] En el Gantt, la tarea 3.1 depende de 2.2, pero el plan permite empezar app.py con una respuesta fija
-- [ ] PDFs escaneados (imagen) no tienen texto: ingesta.py avisa y los omite; harían falta OCR o una versión en texto
+- [ ] En el Gantt, la tarea 3.1 depende de 2.2, pero el plan permitía empezar la API con una respuesta fija (ya no hace falta: responder() existe)
+- [ ] PDFs escaneados (imagen) no tienen texto: la ingesta avisa y los omite; harían falta OCR o una versión en texto
 
 ## Decisiones tomadas
 
 - **Harness con CLAUDE.md**: el proyecto se trabaja con Claude Code
 - **Fase 3 depende solo de Fase 0** en feature_list.json, para que Jenner trabaje en paralelo con una respuesta fija
-- **Estructura de código por capas, sin carpetas extra**: entrada (`app.py`), lógica (`rag.py`), datos (`ingesta.py`, `chroma_db/`, `prompt.txt`). Los imports van solo en ese sentido (test en tests/test_ingesta.py)
-- **Código en src/** (sin paquete): imports directos, rutas desde la raíz del proyecto, pytest con `pythonpath = src`. Las evidencias anteriores a este cambio usan `python <archivo>.py`; hoy es `python src/<archivo>.py`
-- **Diagramas fuera de docs/**: `docs/` solo tiene documentos del negocio porque `ingesta.py` lee todo lo que hay ahí
+- **Estructura por carpetas (reemplaza la estructura plana anterior)**: se sigue `instrucciones/estructura-proyecto-rag.md`. Una carpeta por responsabilidad en `src/`, valores en `config.yaml`, entrada única `main.py`, dependencias verificadas por `tests/test_capas.py`. Equivalencias con evidencias anteriores: `ingesta.py` → `main.py ingestar`; `probar_busqueda.py` → `main.py probar-busqueda`; `rag.py --csv` → `main.py preguntar --csv`; `prompt.txt` → `src/prompts/system_prompt.txt`; `app.py` → `src/api/routes.py`; log → `logs/log_preguntas.csv`
+- **Diagramas fuera de docs/**: `docs/` solo tiene documentos del negocio porque la ingesta lee todo lo que hay ahí
 - **harness-kit/ fuera de git**: la skill instalada ya está en `.claude/skills/`
 - **Fase 1 adelantada con datos de ejemplo**: el negocio ficticio de `ejemplo/` permite construir y probar la ingesta sin esperar la tarea 0.1
-- **Lectores propios (pypdf, docx2txt) en vez de los loaders de langchain-community**: ese paquete está en retiro; ingesta.py no lo usa
-- **Distancia coseno en ChromaDB**: el umbral de relevancia de rag.py se define sobre ella
+- **Lectores propios (pypdf, docx2txt) en vez de los loaders de langchain-community**: ese paquete está en retiro; src/ingestion no lo usa
+- **Distancia coseno en ChromaDB**: el umbral de relevancia de retrieval/ se define sobre ella
 - **CLAUDE.md y .claude/ fuera del repo y de su historial al cierre** (Fase 6, ver CLAUDE.md)
 
 ## Evidencia de cierre (Evidence of Completion)
@@ -75,7 +76,7 @@
 - MENSAJE_SIN_INFO ya no termina en pregunta: el modelo lo copiaba al final de respuestas válidas.
 - gpt-5-mini no es determinista: evaluar siempre con 2 corridas.
 
-## Hallazgo para el umbral de rag.py
+## Hallazgo para el umbral de relevancia
 
 Distancias coseno del fragmento más cercano (ejemplo): preguntas válidas entre 0.36 y 0.64; "¿Venden pizzas?" 0.55; "¿Quién ganó el último mundial?" 0.89.
 - El umbral por distancia sirve para lo claramente fuera de tema (≈ 0.75 separaría el mundial sin perder preguntas válidas).
@@ -84,4 +85,4 @@ Distancias coseno del fragmento más cercano (ejemplo): preguntas válidas entre
 
 ## Notas para la siguiente sesión (Next Session)
 
-.env ya existe y chroma_db/ está cargada con el ejemplo. El código de Jhonatan (Fases 1 y 2) está listo; falta validarlo con los datos reales de la tarea 0.1. Mientras tanto, se puede adelantar el evaluador automático (evaluar.py) que compare respuesta vs. respuesta esperada para las Fases 2.3, 4.3 y 5.3.
+.env ya existe y chroma_db/ está cargada con el ejemplo. El código de Jhonatan (Fases 1 y 2) está listo; falta validarlo con los datos reales de la tarea 0.1. Mientras tanto, se puede adelantar el evaluador automático de respuestas (src/evaluation/answer_eval.py + `python main.py evaluar`) para las Fases 2.3, 4.3 y 5.3, y un README.md en la raíz para Jenner.

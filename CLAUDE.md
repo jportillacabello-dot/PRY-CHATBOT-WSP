@@ -9,21 +9,31 @@ MVP de un chatbot RAG en WhatsApp: responde las consultas de los clientes de un 
 
 ## Estructura
 
+Sigue la guía general [instrucciones/estructura-proyecto-rag.md](instrucciones/estructura-proyecto-rag.md) (carpetas, dependencias, configuración, estilo). Ante cualquier duda de dónde va algo, manda esa guía.
+
 ```
-├── src/             código, plano y por capas: app.py · rag.py · ingesta.py · probar_busqueda.py · prompt.txt
-├── docs/            documentos del negocio: ingesta.py lee TODO lo que hay aquí
-├── data/            preguntas_prueba.csv y log_preguntas.csv
+├── main.py          punto de entrada: ingestar · probar-busqueda · preguntar
+├── config.yaml      modelos, chunk, k, umbral, rutas y mensajes (las claves van en .env)
+├── src/
+│   ├── ingestion/ chunking/ embeddings/ vectordb/     ingesta (Jhonatan)
+│   ├── retrieval/ prompts/ llm/                      respuesta (Jhonatan)
+│   ├── pipeline/    ingest_pipeline.py · rag_pipeline.py (contrato responder)
+│   ├── evaluation/  search_eval.py
+│   ├── api/         routes.py: webhook /whatsapp (Jenner)
+│   └── utils/       config.py · helpers.py
+├── docs/            documentos del negocio: la ingesta lee TODO lo que hay aquí
+├── data/            preguntas_prueba.csv
+├── logs/            log_preguntas.csv y logs (no van a git)
 ├── ejemplo/         negocio ficticio para probar sin datos reales
 ├── tests/           pytest (sin llamadas a OpenAI)
-├── diagramas/       diagramas de arquitectura; referencia/ = guía y plantilla
+├── instrucciones/   guías generales reutilizables
+├── diagramas/       arquitectura; referencia/ = guía y plantilla de diagramas
 ├── planificacion/   plan del MVP (README), Gantt (xlsx) e imagen
 ├── CLAUDE.md · feature_list.json · progress.md · session-handoff.md · init.sh   harness
 └── chroma_db/ · .venv/ · .env   generados o locales (no van a git)
 ```
 
-Nada que no sea un documento del negocio va en `docs/`. Todo el código va en `src/`, sin subcarpetas ni `__init__.py`: los imports son directos (`import rag`) y las rutas por defecto se calculan desde la raíz del proyecto (`ingesta.RAIZ`).
-
-Comandos (desde la raíz): `python src/ingesta.py` · `python src/probar_busqueda.py` · `python src/rag.py --csv data/preguntas_prueba.csv` · servidor: `uvicorn app:app --app-dir src`.
+Comandos (desde la raíz): `python main.py ingestar` · `python main.py probar-busqueda` · `python main.py preguntar --csv data/preguntas_prueba.csv` · servidor: `uvicorn src.api.routes:app`.
 
 ## Flujo de inicio (Startup Workflow)
 
@@ -49,8 +59,9 @@ Si la verificación base falla, arréglala primero antes de añadir alcance nuev
 ## Reglas del proyecto
 
 - **Autoría**: nunca incluyas a Claude como autor ni contribuidor. Nada de `Co-Authored-By: Claude`, "Generated with Claude Code" ni menciones similares en commits, pull requests, README, código o documentación.
-- **Capas e imports**: tres capas en archivos planos, sin carpetas extra. Entrada (`app.py`) → lógica (`rag.py`) → datos (`ingesta.py`, `chroma_db/`, `prompt.txt`). Los imports van solo en ese sentido: `rag.py` e `ingesta.py` nunca importan FastAPI ni Twilio, y `app.py` solo usa `responder()` de `rag.py`.
-- **Estilo de código**: cada archivo de `src/` se lee de arriba abajo en el orden del flujo, dividido en secciones con este encabezado:
+- **Dependencias**: `main.py` → `api/` → `pipeline/` → pasos (`ingestion`, `chunking`, `embeddings`, `vectordb`, `retrieval`, `prompts`, `llm`) → `utils/`. Solo `api/` importa FastAPI o Twilio; nadie importa `api/`; los pasos no importan `pipeline/`, `evaluation/` ni `api/`; `utils/` no importa a nadie. Lo verifica `tests/test_capas.py`.
+- **Configuración**: ningún número o nombre de modelo fijo en el código; va en `config.yaml` y se lee con `src.utils.config`.
+- **Estilo de código**: cada archivo de `src/` y `main.py` se lee de arriba abajo en el orden del flujo, dividido en secciones con este encabezado:
   ```python
   # =====================================================================
   # == PASO 1: Objetivo del paso — qué hace en pocas palabras ==
@@ -63,12 +74,12 @@ Si la verificación base falla, arréglala primero antes de añadir alcance nuev
   3. Volver a conectar el remoto y subir con `git push --force`. Avisar antes a Jenner: los hashes de los commits cambian y tendrá que clonar de nuevo.
   4. Conservar ambos en local.
 - **Secretos**: las claves van solo en `.env` (en `.gitignore`) o en las variables de entorno de Render. Nunca en código, logs ni commits.
-- **El bot no inventa**: el prompt (`prompt.txt`) obliga a responder solo con el contexto recuperado y a decir "no sé" si no está. Es requisito de la política de WhatsApp (solo bots de atención al cliente).
-- **Guardrails**: en `rag.py`, umbral de relevancia (sin fragmentos relevantes no se llama al LLM). En `app.py`, solo texto, máximo 500 caracteres, 10 mensajes por minuto por número y respuesta de respaldo si OpenAI falla. Ver `diagramas/arquitectura-pipeline.html`.
-- **Contrato entre fases**: `rag.py` expone `responder(pregunta: str) -> str`. `app.py` solo depende de esa función; mientras no exista, usa una respuesta fija.
+- **El bot no inventa**: el prompt (`src/prompts/system_prompt.txt`) obliga a responder solo con el contexto recuperado y a decir "no sé" si no está. Es requisito de la política de WhatsApp (solo bots de atención al cliente).
+- **Guardrails**: en `retrieval/`, umbral de relevancia (sin fragmentos relevantes no se llama al LLM). En `api/`, solo texto, máximo 500 caracteres, 10 mensajes por minuto por número y respuesta de respaldo si OpenAI falla. Ver `diagramas/arquitectura-pipeline.html`.
+- **Contrato entre fases**: `src/pipeline/rag_pipeline.py` expone `responder(pregunta: str) -> str` (ya existe). `api/` solo depende de esa función y captura sus excepciones.
 - **Webhook**: Twilio envía formulario (requiere `python-multipart`), espera TwiML y corta a los 15 s. Validar `X-Twilio-Signature` y mantener respuestas cortas (cada mensaje extra se cobra).
-- **Log**: en `data/log_preguntas.csv` el número de teléfono va anonimizado.
-- **Modelos**: `gpt-5-mini` para responder, `text-embedding-3-small` para embeddings. Si se cambia el modelo de embeddings, hay que volver a correr `ingesta.py`.
+- **Log**: en `logs/log_preguntas.csv` el número de teléfono va anonimizado.
+- **Modelos**: `gpt-5-mini` para responder, `text-embedding-3-small` para embeddings (ambos en `config.yaml`). Si se cambia el modelo de embeddings, hay que volver a correr `python main.py ingestar`.
 
 ## Artefactos requeridos
 

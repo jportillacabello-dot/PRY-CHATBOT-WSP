@@ -10,8 +10,9 @@ __pycache__/
 # Base vectorial: se genera con ingesta.py
 chroma_db/
 
-# Log con consultas reales de clientes
-data/log_preguntas.csv
+# Logs: pueden tener consultas reales de clientes
+logs/*
+!logs/.gitkeep
 
 # Copia de origen de la skill (la instalada está en .claude/skills/)
 harness-kit/
