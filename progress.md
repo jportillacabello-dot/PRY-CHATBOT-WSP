@@ -12,22 +12,23 @@
 - [x] Plan del MVP (README + Excel con Gantt, pasos y horas)
 - [x] Harness instalado: CLAUDE.md, feature_list.json, progress.md, session-handoff.md, init.sh
 - [x] Skill harness-creator instalada en .claude/skills/
-- [x] Repo git local (rama main), carpetas docs/, data/, diagramas/
+- [x] Repo en GitHub: https://github.com/jportillacabello-dot/PRY-CHATBOT-WSP (rama main)
+- [x] Carpetas docs/, data/, diagramas/
 - [x] requirements.txt (con python-multipart, docx2txt y pytest), .gitignore, .env.example
 - [x] .venv con dependencias instaladas
 - [x] Plantilla data/preguntas_prueba.csv (columnas pregunta,respuesta_esperada)
-- [x] Diagrama de pipeline: diagramas/arquitectura-pipeline.html (hecho con arquitectura-ref/)
+- [x] Diagrama de pipeline con guardrails: diagramas/arquitectura-pipeline.html (hecho con arquitectura-ref/)
 
 ### Qué está en curso (What's In Progress)
 
 - [ ] Fase 0 – Preparación (Jenner, 26–27 nov)
-  - Falta: elegir el negocio, documentos en docs/, las 20 preguntas, cuentas y claves en .env, subir el repo a GitHub
+  - Falta: elegir el negocio, documentos en docs/, las 20 preguntas, cuentas y claves en .env
   - Bloqueos: Fase 1 necesita los documentos y las preguntas reales
 
 ### Qué sigue (What's Next)
 
 1. Jenner: tarea 0.1 (negocio, documentos, 20 preguntas)
-2. Jhonatan: API key de OpenAI en .env; crear el repo remoto en GitHub y hacer push
+2. Jhonatan: API key de OpenAI en .env; invitar a Jenner como colaborador en GitHub
 3. Jhonatan: ingesta.py con documentos de prueba mientras llegan los reales
 
 ## Bloqueos / Riesgos (Blockers / Risks)
