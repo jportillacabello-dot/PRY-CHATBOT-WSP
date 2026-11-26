@@ -3,9 +3,9 @@
 Capa de lógica: no importa FastAPI ni Twilio. app.py solo usa responder().
 
 Uso en consola:
-    python rag.py "¿A qué hora abren?"
-    python rag.py                                      # modo conversación
-    python rag.py --csv ejemplo/preguntas_prueba.csv   # responde todas las preguntas
+    python src/rag.py "¿A qué hora abren?"
+    python src/rag.py                                      # modo conversación
+    python src/rag.py --csv ejemplo/preguntas_prueba.csv   # responde todas las preguntas
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ def abrir_base(destino: Path = ingesta.CHROMA_DIR, embeddings: Embeddings | None
     """Abre la base que creó ingesta.py."""
     destino = Path(destino)
     if not (destino / "chroma.sqlite3").exists():
-        raise FileNotFoundError(f"No existe la base en {destino.as_posix()}/. Corre primero: python ingesta.py")
+        raise FileNotFoundError(f"No existe la base en {ingesta.mostrar(destino)}/. Corre primero: python src/ingesta.py")
     cliente = chromadb.PersistentClient(
         path=str(destino),
         settings=chromadb.config.Settings(anonymized_telemetry=False),

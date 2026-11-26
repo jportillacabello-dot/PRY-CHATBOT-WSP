@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 RAIZ = Path(__file__).resolve().parent.parent
+SRC = RAIZ / "src"
 CAPA_ENTRADA = {"fastapi", "twilio", "app"}
 
 
@@ -22,8 +23,8 @@ def _modulos_importados(archivo: Path) -> set[str]:
 
 @pytest.mark.parametrize("archivo", ["ingesta.py", "rag.py", "probar_busqueda.py"])
 def test_no_importa_la_capa_de_entrada(archivo):
-    assert not _modulos_importados(RAIZ / archivo) & CAPA_ENTRADA
+    assert not _modulos_importados(SRC / archivo) & CAPA_ENTRADA
 
 
 def test_ingesta_no_importa_la_logica():
-    assert "rag" not in _modulos_importados(RAIZ / "ingesta.py")
+    assert "rag" not in _modulos_importados(SRC / "ingesta.py")

@@ -30,13 +30,13 @@
 - [ ] Fase 0 – Preparación (Jenner, 26–27 nov)
   - Falta: elegir el negocio, documentos en docs/, las 20 preguntas, cuentas y claves en .env
 - [ ] Fases 1 y 2 (Jhonatan): código terminado y validado con el ejemplo
-  - Falta: con los documentos reales, correr `python ingesta.py`, `python probar_busqueda.py` (ajustar UMBRAL_DISTANCIA en rag.py) y `python rag.py --csv data/preguntas_prueba.csv` (meta ≥ 18/20)
+  - Falta: con los documentos reales, correr `python src/ingesta.py`, `python src/probar_busqueda.py` (ajustar UMBRAL_DISTANCIA en src/rag.py) y `python src/rag.py --csv data/preguntas_prueba.csv` (meta ≥ 18/20)
   - Bloqueos: tarea 0.1 de Jenner
 
 ### Qué sigue (What's Next)
 
 1. Avisar a Jenner que `responder(pregunta) -> str` ya existe en rag.py: puede conectar app.py directamente (sin respuesta fija). Las excepciones las captura app.py
-2. Jenner: tarea 0.1 (negocio, documentos, 20 preguntas); al llegar, correr `python ingesta.py` sobre docs/
+2. Jenner: tarea 0.1 (negocio, documentos, 20 preguntas); al llegar, correr `python src/ingesta.py` sobre docs/. app.py va en src/ y se levanta con `uvicorn app:app --app-dir src`
 3. Jhonatan: invitar a Jenner como colaborador en GitHub
 
 ## Bloqueos / Riesgos (Blockers / Risks)
@@ -51,6 +51,7 @@
 - **Harness con CLAUDE.md**: el proyecto se trabaja con Claude Code
 - **Fase 3 depende solo de Fase 0** en feature_list.json, para que Jenner trabaje en paralelo con una respuesta fija
 - **Estructura de código por capas, sin carpetas extra**: entrada (`app.py`), lógica (`rag.py`), datos (`ingesta.py`, `chroma_db/`, `prompt.txt`). Los imports van solo en ese sentido (test en tests/test_ingesta.py)
+- **Código en src/** (sin paquete): imports directos, rutas desde la raíz del proyecto, pytest con `pythonpath = src`. Las evidencias anteriores a este cambio usan `python <archivo>.py`; hoy es `python src/<archivo>.py`
 - **Diagramas fuera de docs/**: `docs/` solo tiene documentos del negocio porque `ingesta.py` lee todo lo que hay ahí
 - **harness-kit/ fuera de git**: la skill instalada ya está en `.claude/skills/`
 - **Fase 1 adelantada con datos de ejemplo**: el negocio ficticio de `ejemplo/` permite construir y probar la ingesta sin esperar la tarea 0.1

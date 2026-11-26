@@ -76,7 +76,7 @@ def test_respuesta_vacia_del_llm_se_convierte_en_sin_info(base):
 
 
 def test_abrir_base_inexistente_da_error_claro(tmp_path):
-    with pytest.raises(FileNotFoundError, match="python ingesta.py"):
+    with pytest.raises(FileNotFoundError, match="python src/ingesta.py"):
         rag.abrir_base(tmp_path / "no-existe", DeterministicFakeEmbedding(size=8))
 
 

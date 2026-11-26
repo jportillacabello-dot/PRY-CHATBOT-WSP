@@ -10,7 +10,7 @@ MVP de un chatbot RAG en WhatsApp: responde las consultas de los clientes de un 
 ## Estructura
 
 ```
-├── app.py · rag.py · ingesta.py · probar_busqueda.py · prompt.txt   código (plano, por capas)
+├── src/             código, plano y por capas: app.py · rag.py · ingesta.py · probar_busqueda.py · prompt.txt
 ├── docs/            documentos del negocio: ingesta.py lee TODO lo que hay aquí
 ├── data/            preguntas_prueba.csv y log_preguntas.csv
 ├── ejemplo/         negocio ficticio para probar sin datos reales
@@ -21,7 +21,9 @@ MVP de un chatbot RAG en WhatsApp: responde las consultas de los clientes de un 
 └── chroma_db/ · .venv/ · .env   generados o locales (no van a git)
 ```
 
-Nada que no sea un documento del negocio va en `docs/`. El código se queda en la raíz: Render arranca `app.py` desde ahí y los imports son directos.
+Nada que no sea un documento del negocio va en `docs/`. Todo el código va en `src/`, sin subcarpetas ni `__init__.py`: los imports son directos (`import rag`) y las rutas por defecto se calculan desde la raíz del proyecto (`ingesta.RAIZ`).
+
+Comandos (desde la raíz): `python src/ingesta.py` · `python src/probar_busqueda.py` · `python src/rag.py --csv data/preguntas_prueba.csv` · servidor: `uvicorn app:app --app-dir src`.
 
 ## Flujo de inicio (Startup Workflow)
 

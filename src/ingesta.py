@@ -3,8 +3,8 @@
 Capa de datos: no importa FastAPI ni Twilio (ver CLAUDE.md).
 
 Uso:
-    python ingesta.py                       # lee docs/ y crea chroma_db/
-    python ingesta.py --docs ejemplo/docs   # con el negocio de ejemplo
+    python src/ingesta.py                       # lee docs/ y crea chroma_db/
+    python src/ingesta.py --docs ejemplo/docs   # con el negocio de ejemplo
 
 Cada ejecución reconstruye la colección desde cero, así que se puede correr
 todas las veces que cambien los documentos sin duplicar fragmentos.
@@ -25,8 +25,9 @@ from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-DOCS_DIR = Path("docs")
-CHROMA_DIR = Path("chroma_db")
+RAIZ = Path(__file__).resolve().parent.parent  # raíz del proyecto
+DOCS_DIR = RAIZ / "docs"
+CHROMA_DIR = RAIZ / "chroma_db"
 COLECCION = "negocio"
 MODELO_EMBEDDINGS = "text-embedding-3-small"
 CHUNK_SIZE = 800
@@ -37,6 +38,15 @@ METADATA_COLECCION = {"hnsw:space": "cosine"}
 
 # Números de página sueltos: "3", "Página 3", "3 de 10", "3/10".
 _NUMERO_PAGINA = re.compile(r"^(p[áa]g(ina)?\.?\s*)?\d+(\s*(de|/)\s*\d+)?$", re.IGNORECASE)
+
+
+def mostrar(ruta: Path) -> str:
+    """Ruta corta para mensajes: relativa a la carpeta actual si se puede."""
+    ruta = Path(ruta).resolve()
+    try:
+        return ruta.relative_to(Path.cwd()).as_posix()
+    except ValueError:
+        return ruta.as_posix()
 
 
 # ---------------------------------------------------------------- limpieza
@@ -180,7 +190,7 @@ def verificar_clave() -> None:
     """Carga .env y falla con un mensaje claro si no hay OPENAI_API_KEY."""
     from dotenv import load_dotenv
 
-    load_dotenv()
+    load_dotenv(RAIZ / ".env")
     if not os.getenv("OPENAI_API_KEY"):
         raise RuntimeError("Falta OPENAI_API_KEY. Copia .env.example como .env y pega tu clave.")
 
@@ -205,7 +215,7 @@ def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")  # tildes correctas también en Git Bash
 
-    print(f"Leyendo documentos de {args.docs.as_posix()}/")
+    print(f"Leyendo documentos de {mostrar(args.docs)}/")
     try:
         documentos = cargar_documentos(args.docs)
     except FileNotFoundError as error:
@@ -229,7 +239,7 @@ def main(argv: list[str] | None = None) -> int:
     construir_base(fragmentos, embeddings, args.destino)
     # Aproximación: 1 token ≈ 4 caracteres; text-embedding-3-small cuesta $0.02 por 1M tokens.
     costo = caracteres / 4 / 1_000_000 * 0.02
-    print(f"Base guardada en {args.destino.as_posix()}/ (colección '{COLECCION}'). Costo aprox.: ${costo:.4f}")
+    print(f"Base guardada en {mostrar(args.destino)}/ (colección '{COLECCION}'). Costo aprox.: ${costo:.4f}")
     return 0
 
 

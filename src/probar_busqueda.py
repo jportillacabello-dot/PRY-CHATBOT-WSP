@@ -4,8 +4,8 @@ No llama al LLM: solo mide la búsqueda en ChromaDB y sugiere un umbral de
 relevancia para rag.py.
 
 Uso:
-    python probar_busqueda.py                                      # data/preguntas_prueba.csv
-    python probar_busqueda.py --preguntas ejemplo/preguntas_prueba.csv --k 3
+    python src/probar_busqueda.py                                  # data/preguntas_prueba.csv
+    python src/probar_busqueda.py --preguntas ejemplo/preguntas_prueba.csv --k 3
 
 El CSV necesita las columnas `pregunta` y `fuente_esperada` (nombre del archivo
 donde está la respuesta; vacía si la respuesta no está en los documentos).
@@ -21,9 +21,10 @@ from pathlib import Path
 
 from langchain_chroma import Chroma
 
+import ingesta
 import rag
 
-PREGUNTAS = Path("data/preguntas_prueba.csv")
+PREGUNTAS = ingesta.RAIZ / "data" / "preguntas_prueba.csv"
 META_ACIERTO = 0.9  # 18 de 20
 MARGEN_UMBRAL = 0.05
 
@@ -132,7 +133,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         filas = leer_preguntas(args.preguntas)
         if not filas:
-            print(f"ERROR: {args.preguntas.as_posix()} no tiene preguntas. Complétalo o usa --preguntas ejemplo/preguntas_prueba.csv")
+            print(f"ERROR: {ingesta.mostrar(args.preguntas)} no tiene preguntas. Complétalo o usa --preguntas ejemplo/preguntas_prueba.csv")
             return 1
         resultados = evaluar(filas, rag.abrir_base(), args.k)
     except (FileNotFoundError, ValueError, RuntimeError) as error:
