@@ -51,7 +51,7 @@
     {
       "id": "feat-006",
       "name": "Fase 6 – Cierre",
-      "description": "README final con instalación y diagramas C1/C2, video demo de 1–2 min y comparación de costos reales vs. presupuesto. Responsable: Jenner (Jhonatan apoya en la demo). Fecha: 11 dic.",
+      "description": "README final con instalación y diagramas C1/C2, video demo de 1–2 min y comparación de costos reales vs. presupuesto. Último paso: sacar CLAUDE.md del repo (agregarlo a .gitignore y git rm --cached CLAUDE.md). Responsable: Jenner (Jhonatan apoya en la demo). Fecha: 11 dic.",
       "dependencies": ["feat-005"],
       "status": "not-started",
       "evidence": ""

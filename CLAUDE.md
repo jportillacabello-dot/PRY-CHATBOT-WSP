@@ -31,6 +31,7 @@ Si la verificación base falla, arréglala primero antes de añadir alcance nuev
 ## Reglas del proyecto
 
 - **Autoría**: nunca incluyas a Claude como autor ni contribuidor. Nada de `Co-Authored-By: Claude`, "Generated with Claude Code" ni menciones similares en commits, pull requests, README, código o documentación.
+- **Cierre del proyecto**: al terminar el MVP (Fase 6), `CLAUDE.md` sale del repositorio: agregarlo a `.gitignore` y ejecutar `git rm --cached CLAUDE.md` (solo `.gitignore` no basta, porque el archivo ya está versionado). El archivo se conserva en local.
 - **Secretos**: las claves van solo en `.env` (en `.gitignore`) o en las variables de entorno de Render. Nunca en código, logs ni commits.
 - **El bot no inventa**: el prompt (`prompt.txt`) obliga a responder solo con el contexto recuperado y a decir "no sé" si no está. Es requisito de la política de WhatsApp (solo bots de atención al cliente).
 - **Guardrails**: en `rag.py`, umbral de relevancia (sin fragmentos relevantes no se llama al LLM). En `app.py`, solo texto, máximo 500 caracteres, 10 mensajes por minuto por número y respuesta de respaldo si OpenAI falla. Ver `diagramas/arquitectura-pipeline.html`.
