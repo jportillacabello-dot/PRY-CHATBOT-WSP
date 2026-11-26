@@ -6,7 +6,7 @@
       "description": "Caso de uso definido, documentos en /docs, data/preguntas_prueba.csv con 20 preguntas, cuentas (OpenAI, Twilio, ngrok, GitHub, Render), venv, requirements.txt (incluye python-multipart) y .env en .gitignore. Responsable: Jenner. Fecha: 26–27 nov.",
       "dependencies": [],
       "status": "in-progress",
-      "evidence": "2026-11-26: repo git local, requirements.txt, .gitignore, .env.example, .venv instalado y bash init.sh OK. Repo subido a GitHub. Falta: negocio, documentos, 20 preguntas y cuentas."
+      "evidence": "2026-11-26: repo git local, requirements.txt, .gitignore, .env.example, .venv instalado y bash init.sh OK. Repo subido a GitHub. Twilio (Trial) activa con credenciales en .env verificadas. Falta: negocio, documentos, 20 preguntas, Sandbox de WhatsApp, ngrok y Render."
     },
     {
       "id": "feat-001",

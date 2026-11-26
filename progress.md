@@ -30,7 +30,8 @@
 ### Qué está en curso (What's In Progress)
 
 - [ ] Fase 0 – Preparación (Jenner, 26–27 nov)
-  - Falta: elegir el negocio, documentos en docs/, las 20 preguntas, cuentas y claves en .env
+  - Falta: elegir el negocio, documentos en docs/, las 20 preguntas, activar el Sandbox de WhatsApp, ngrok y la cuenta de Render
+  - Hecho: cuenta de Twilio (Trial) activa; TWILIO_ACCOUNT_SID y TWILIO_AUTH_TOKEN en .env y verificados contra la API (26-nov)
 - [ ] Fases 1 y 2 (Jhonatan): código terminado y validado con el ejemplo
   - Falta: con los documentos reales, correr `python main.py ingestar`, `python main.py probar-busqueda` (ajustar `retrieval.umbral_distancia` en config.yaml) y `python main.py preguntar --csv data/preguntas_prueba.csv` (meta ≥ 18/20, dos corridas)
   - Bloqueos: tarea 0.1 de Jenner
@@ -39,7 +40,7 @@
 
 1. Avisar a Jenner que `responder(pregunta) -> str` ya existe en `src/pipeline/rag_pipeline.py`: su webhook va en `src/api/routes.py` (instrucciones en `src/api/__init__.py`) y se levanta con `uvicorn src.api.routes:app`. Las excepciones las captura api/
 2. Jenner: tarea 0.1 (negocio, documentos, 20 preguntas); al llegar, correr `python main.py ingestar`
-3. Jhonatan: invitar a Jenner como colaborador en GitHub
+3. Jhonatan: invitar a Jenner como colaborador en GitHub y pasarle por canal seguro las variables de .env (OpenAI y Twilio)
 
 ## Bloqueos / Riesgos (Blockers / Risks)
 
@@ -58,6 +59,8 @@
 - **Material de referencia junto en referencias/**: guía RAG, plantilla de diagramas y harness-kit
 - **Fase 1 adelantada con datos de ejemplo**: el negocio ficticio de `ejemplo/` permite construir y probar la ingesta sin esperar la tarea 0.1
 - **Lectores propios (pypdf, docx2txt) en vez de los loaders de langchain-community**: ese paquete está en retiro; src/ingestion no lo usa
+- **Una sola cuenta de Twilio para los dos** (la que está en .env). Render: también una sola cuenta, recomendado que la cree Jenner (Fase 5); despliega solo con cada push a main. Nunca compartir contraseñas, solo variables de entorno por canal seguro
+- **Responsables actualizados en el Excel (26-nov)**: pasos 0.2.1–0.2.3 y 0.3.1–0.3.3 a cargo de Jhonatan
 - **Distancia coseno en ChromaDB**: el umbral de relevancia de retrieval/ se define sobre ella
 - **CLAUDE.md y .claude/ fuera del repo y de su historial al cierre** (Fase 6, ver CLAUDE.md)
 
