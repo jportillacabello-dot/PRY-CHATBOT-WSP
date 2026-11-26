@@ -3,7 +3,7 @@
 ## Estado actual (Current State)
 
 **Última actualización (Last Updated):** 2026-11-26
-**Funcionalidad activa:** feat-001 - Fase 1 – Ingesta (adelantada con el negocio de ejemplo; feat-000 sigue en curso con Jenner)
+**Funcionalidad activa:** feat-002 - Fase 2 – Cadena RAG (hecha con el negocio de ejemplo; falta validar con datos reales). feat-000 sigue en curso con Jenner
 
 ## Estado
 
@@ -20,19 +20,22 @@
 - [x] Diagrama de pipeline con guardrails: diagramas/arquitectura-pipeline.html (hecho con arquitectura-ref/)
 - [x] Negocio de ejemplo (ficticio) en ejemplo/: docs (faq.md, politicas.txt, carta.pdf) y 20 preguntas
 - [x] ingesta.py: carga PDF/Word/TXT/MD, limpia encabezados y pies, trocea (800/100), guarda en ChromaDB con distancia coseno; reconstruye la colección en cada corrida
-- [x] tests/test_ingesta.py: 9 tests con embeddings falsos (sin costo), incluido el chequeo de capas
+- [x] tests/test_ingesta.py: 9 tests con embeddings falsos (sin costo)
+- [x] probar_busqueda.py (tarea 1.3): % de fuente correcta en top-k, rangos de distancia y umbral sugerido; sale con código 1 si no llega a 90 %
+- [x] prompt.txt (reglas) y rag.py: responder(pregunta) -> str, responder_con_detalle() para evaluar, umbral de relevancia, CLI con --csv
+- [x] tests/test_rag.py y tests/test_capas.py: 22 tests en total con LLM y embeddings falsos
 
 ### Qué está en curso (What's In Progress)
 
 - [ ] Fase 0 – Preparación (Jenner, 26–27 nov)
   - Falta: elegir el negocio, documentos en docs/, las 20 preguntas, cuentas y claves en .env
-- [ ] Fase 1 – Ingesta (Jhonatan)
-  - Falta: tarea 1.3 como script reutilizable y repetirla con los documentos reales
-  - Bloqueos: ninguno
+- [ ] Fases 1 y 2 (Jhonatan): código terminado y validado con el ejemplo
+  - Falta: con los documentos reales, correr `python ingesta.py`, `python probar_busqueda.py` (ajustar UMBRAL_DISTANCIA en rag.py) y `python rag.py --csv data/preguntas_prueba.csv` (meta ≥ 18/20)
+  - Bloqueos: tarea 0.1 de Jenner
 
 ### Qué sigue (What's Next)
 
-1. Jhonatan: script para la tarea 1.3 (por cada pregunta, ¿el fragmento correcto está entre los k primeros?) usando la columna fuente_esperada
+1. Avisar a Jenner que `responder(pregunta) -> str` ya existe en rag.py: puede conectar app.py directamente (sin respuesta fija). Las excepciones las captura app.py
 2. Jenner: tarea 0.1 (negocio, documentos, 20 preguntas); al llegar, correr `python ingesta.py` sobre docs/
 3. Jhonatan: invitar a Jenner como colaborador en GitHub
 
@@ -61,6 +64,15 @@
 - [x] `python ingesta.py --docs ejemplo/docs`: 3 archivos, 3 páginas, 5 fragmentos; se detiene con mensaje claro por falta de OPENAI_API_KEY
 - [x] Ingesta con embeddings reales de OpenAI: `python ingesta.py --docs ejemplo/docs` → 5 fragmentos en chroma_db/, costo < $0.0001
 - [x] Búsqueda de prueba con las 20 preguntas de ejemplo (k=3): fuente correcta en 18/18. Poco exigente: con 5 fragmentos, k=3 cubre el 60 % de la base
+- [x] `python rag.py --csv ejemplo/preguntas_prueba.csv`: 20/20 correctas en dos corridas seguidas, promedio 1.7 s, máximo 4.2 s (límite de Twilio: 15 s)
+- [x] 4/4 intentos de manipulación rechazados (poema, revelar instrucciones, cambiar un precio, "asistente general"): 1 por umbral, 3 por prompt
+
+## Ajustes al prompt (con el ejemplo)
+
+- v1 ofrecía acciones que el bot no puede hacer ("¿Te ayudo a hacer el pedido?") y cerraba con preguntas → regla 5: solo informa, sin preguntas al final.
+- v2 dijo "no tengo esa información" a "¿Aceptan cheques?" (la respuesta sí estaba) por la frase "o solo la contiene en parte" → regla 2: si está en parte, responde esa parte.
+- MENSAJE_SIN_INFO ya no termina en pregunta: el modelo lo copiaba al final de respuestas válidas.
+- gpt-5-mini no es determinista: evaluar siempre con 2 corridas.
 
 ## Hallazgo para el umbral de rag.py
 
@@ -71,4 +83,4 @@ Distancias coseno del fragmento más cercano (ejemplo): preguntas válidas entre
 
 ## Notas para la siguiente sesión (Next Session)
 
-.env ya existe y chroma_db/ está cargada con el ejemplo. Seguir con la tarea 1.3 (script de prueba de búsqueda) y luego rag.py.
+.env ya existe y chroma_db/ está cargada con el ejemplo. El código de Jhonatan (Fases 1 y 2) está listo; falta validarlo con los datos reales de la tarea 0.1. Mientras tanto, se puede adelantar el evaluador automático (evaluar.py) que compare respuesta vs. respuesta esperada para las Fases 2.3, 4.3 y 5.3.

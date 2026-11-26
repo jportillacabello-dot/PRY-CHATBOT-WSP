@@ -1,6 +1,5 @@
 """Tests de ingesta.py. Usan embeddings falsos: no llaman a OpenAI ni cuestan nada."""
 
-import ast
 import zipfile
 from pathlib import Path
 
@@ -101,16 +100,3 @@ def test_main_sin_api_key_falla_con_mensaje(monkeypatch, tmp_path, capsys):
     codigo = ingesta.main(["--docs", str(EJEMPLO), "--destino", str(tmp_path / "db")])
     assert codigo == 1
     assert "OPENAI_API_KEY" in capsys.readouterr().out
-
-
-# ------------------------------------------------------------------ capas
-
-def test_ingesta_no_importa_la_capa_de_entrada():
-    arbol = ast.parse((RAIZ / "ingesta.py").read_text(encoding="utf-8"))
-    modulos = set()
-    for nodo in ast.walk(arbol):
-        if isinstance(nodo, ast.Import):
-            modulos |= {a.name.split(".")[0] for a in nodo.names}
-        elif isinstance(nodo, ast.ImportFrom) and nodo.module:
-            modulos.add(nodo.module.split(".")[0])
-    assert not modulos & {"fastapi", "twilio", "app"}

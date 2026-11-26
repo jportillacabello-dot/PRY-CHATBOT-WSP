@@ -14,15 +14,15 @@
       "description": "ingesta.py carga los documentos, los corta en chunks (~800 caracteres), genera embeddings con text-embedding-3-small y los guarda en /chroma_db. Terminado cuando la búsqueda trae el fragmento correcto para las 20 preguntas de prueba. Responsable: Jhonatan. Fecha: 28–30 nov.",
       "dependencies": ["feat-000"],
       "status": "in-progress",
-      "evidence": "2026-11-26: ingesta.py hecho y probado con el negocio de ejemplo (ejemplo/docs) y embeddings falsos: 9 tests OK. Ingesta real con OpenAI OK (3 archivos, 5 fragmentos). Búsqueda de prueba: fuente correcta en top-3 en 18/18 (poco exigente con solo 5 fragmentos). Falta: tarea 1.3 como script y repetirla con los documentos reales."
+      "evidence": "2026-11-26: ingesta.py hecho y probado con el negocio de ejemplo (ejemplo/docs) y embeddings falsos: 9 tests OK. Ingesta real con OpenAI OK (3 archivos, 5 fragmentos). Tarea 1.3 como script (probar_busqueda.py): fuente correcta en top-4 en 18/18 con el ejemplo (poco exigente con solo 5 fragmentos). Falta: repetirla con los documentos y preguntas reales y calibrar el umbral."
     },
     {
       "id": "feat-002",
       "name": "Fase 2 – Cadena RAG",
       "description": "prompt.txt con las reglas (solo el negocio, decir 'no sé') y rag.py con responder(pregunta) -> str usando el retriever de ChromaDB y gpt-5-mini. Guardrails: umbral de relevancia (si ningún fragmento lo supera, responde 'no tengo esa información' sin llamar al LLM) y prompt que no sigue instrucciones del cliente ni revela sus reglas. Terminado con ≥ 18/20 correctas en consola. Responsable: Jhonatan. Fecha: 1–3 dic.",
       "dependencies": ["feat-001"],
-      "status": "not-started",
-      "evidence": ""
+      "status": "in-progress",
+      "evidence": "2026-11-26: prompt.txt y rag.py (responder, umbral 0.75, gpt-5-mini con reasoning_effort minimal, timeout 10 s) hechos. Ejemplo: 20/20 correctas en dos corridas seguidas (python rag.py --csv ejemplo/preguntas_prueba.csv), promedio 1.7 s, máximo 4.2 s; 4/4 intentos de manipulación rechazados. 22 tests OK. Falta: repetir con las 20 preguntas reales."
     },
     {
       "id": "feat-003",

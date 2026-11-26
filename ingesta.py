@@ -176,14 +176,20 @@ def construir_base(
     return base
 
 
-def crear_embeddings() -> Embeddings:
-    """Embeddings de OpenAI. Necesita OPENAI_API_KEY en .env."""
+def verificar_clave() -> None:
+    """Carga .env y falla con un mensaje claro si no hay OPENAI_API_KEY."""
     from dotenv import load_dotenv
-    from langchain_openai import OpenAIEmbeddings
 
     load_dotenv()
     if not os.getenv("OPENAI_API_KEY"):
         raise RuntimeError("Falta OPENAI_API_KEY. Copia .env.example como .env y pega tu clave.")
+
+
+def crear_embeddings() -> Embeddings:
+    """Embeddings de OpenAI. Necesita OPENAI_API_KEY en .env."""
+    from langchain_openai import OpenAIEmbeddings
+
+    verificar_clave()
     return OpenAIEmbeddings(model=MODELO_EMBEDDINGS)
 
 
