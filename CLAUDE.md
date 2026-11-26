@@ -32,11 +32,11 @@ Si la verificación base falla, arréglala primero antes de añadir alcance nuev
 
 - **Autoría**: nunca incluyas a Claude como autor ni contribuidor. Nada de `Co-Authored-By: Claude`, "Generated with Claude Code" ni menciones similares en commits, pull requests, README, código o documentación.
 - **Capas e imports**: tres capas en archivos planos, sin carpetas extra. Entrada (`app.py`) → lógica (`rag.py`) → datos (`ingesta.py`, `chroma_db/`, `prompt.txt`). Los imports van solo en ese sentido: `rag.py` e `ingesta.py` nunca importan FastAPI ni Twilio, y `app.py` solo usa `responder()` de `rag.py`.
-- **Cierre del proyecto**: al terminar el MVP (Fase 6), `CLAUDE.md` sale del repositorio y de su historial:
-  1. Agregar `CLAUDE.md` a `.gitignore`.
-  2. Reescribir el historial con `git filter-repo --path CLAUDE.md --invert-paths` (se instala con `pip install git-filter-repo`), trabajando sobre una copia del repo.
+- **Cierre del proyecto**: al terminar el MVP (Fase 6), `CLAUDE.md` y la carpeta `.claude/` salen del repositorio y de su historial:
+  1. Agregar `CLAUDE.md` y `.claude/` a `.gitignore`.
+  2. Reescribir el historial con `git filter-repo --path CLAUDE.md --path .claude --invert-paths` (se instala con `pip install git-filter-repo`), trabajando sobre una copia del repo. Revisar también los mensajes de commit que nombran esos archivos.
   3. Volver a conectar el remoto y subir con `git push --force`. Avisar antes a Jenner: los hashes de los commits cambian y tendrá que clonar de nuevo.
-  4. Conservar el archivo en local.
+  4. Conservar ambos en local.
 - **Secretos**: las claves van solo en `.env` (en `.gitignore`) o en las variables de entorno de Render. Nunca en código, logs ni commits.
 - **El bot no inventa**: el prompt (`prompt.txt`) obliga a responder solo con el contexto recuperado y a decir "no sé" si no está. Es requisito de la política de WhatsApp (solo bots de atención al cliente).
 - **Guardrails**: en `rag.py`, umbral de relevancia (sin fragmentos relevantes no se llama al LLM). En `app.py`, solo texto, máximo 500 caracteres, 10 mensajes por minuto por número y respuesta de respaldo si OpenAI falla. Ver `diagramas/arquitectura-pipeline.html`.

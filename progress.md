@@ -27,15 +27,14 @@
 - [ ] Fase 0 – Preparación (Jenner, 26–27 nov)
   - Falta: elegir el negocio, documentos en docs/, las 20 preguntas, cuentas y claves en .env
 - [ ] Fase 1 – Ingesta (Jhonatan)
-  - Falta: correr con embeddings reales de OpenAI (necesita .env) y la tarea 1.3: probar la búsqueda con las 20 preguntas y ajustar chunk/k
-  - Bloqueos: sin OPENAI_API_KEY no se puede correr `python ingesta.py`
+  - Falta: tarea 1.3 como script reutilizable y repetirla con los documentos reales
+  - Bloqueos: ninguno
 
 ### Qué sigue (What's Next)
 
-1. Jhonatan: crear .env con OPENAI_API_KEY y correr `python ingesta.py --docs ejemplo/docs`
-2. Jhonatan: script para la tarea 1.3 (por cada pregunta, ¿el fragmento correcto está entre los k primeros?) usando la columna fuente_esperada
-3. Jenner: tarea 0.1 (negocio, documentos, 20 preguntas); al llegar, correr `python ingesta.py` sobre docs/
-4. Jhonatan: invitar a Jenner como colaborador en GitHub
+1. Jhonatan: script para la tarea 1.3 (por cada pregunta, ¿el fragmento correcto está entre los k primeros?) usando la columna fuente_esperada
+2. Jenner: tarea 0.1 (negocio, documentos, 20 preguntas); al llegar, correr `python ingesta.py` sobre docs/
+3. Jhonatan: invitar a Jenner como colaborador en GitHub
 
 ## Bloqueos / Riesgos (Blockers / Risks)
 
@@ -54,14 +53,22 @@
 - **Fase 1 adelantada con datos de ejemplo**: el negocio ficticio de `ejemplo/` permite construir y probar la ingesta sin esperar la tarea 0.1
 - **Lectores propios (pypdf, docx2txt) en vez de los loaders de langchain-community**: ese paquete está en retiro; ingesta.py no lo usa
 - **Distancia coseno en ChromaDB**: el umbral de relevancia de rag.py se define sobre ella
-- **CLAUDE.md fuera del repo y de su historial al cierre** (Fase 6, ver CLAUDE.md)
+- **CLAUDE.md y .claude/ fuera del repo y de su historial al cierre** (Fase 6, ver CLAUDE.md)
 
 ## Evidencia de cierre (Evidence of Completion)
 
 - [x] `bash init.sh` pasa: 9 tests OK (2026-11-26)
 - [x] `python ingesta.py --docs ejemplo/docs`: 3 archivos, 3 páginas, 5 fragmentos; se detiene con mensaje claro por falta de OPENAI_API_KEY
-- [ ] Ingesta con embeddings reales de OpenAI
+- [x] Ingesta con embeddings reales de OpenAI: `python ingesta.py --docs ejemplo/docs` → 5 fragmentos en chroma_db/, costo < $0.0001
+- [x] Búsqueda de prueba con las 20 preguntas de ejemplo (k=3): fuente correcta en 18/18. Poco exigente: con 5 fragmentos, k=3 cubre el 60 % de la base
+
+## Hallazgo para el umbral de rag.py
+
+Distancias coseno del fragmento más cercano (ejemplo): preguntas válidas entre 0.36 y 0.64; "¿Venden pizzas?" 0.55; "¿Quién ganó el último mundial?" 0.89.
+- El umbral por distancia sirve para lo claramente fuera de tema (≈ 0.75 separaría el mundial sin perder preguntas válidas).
+- No sirve para preguntas del mismo rubro que no están en los documentos (pizzas cae dentro del rango válido): eso lo debe cubrir el prompt ("si el contexto no lo dice, responde que no tienes esa información").
+- Recalibrar el umbral con los documentos y preguntas reales.
 
 ## Notas para la siguiente sesión (Next Session)
 
-Empezar por crear .env y correr la ingesta real sobre ejemplo/docs. Después, la tarea 1.3 (prueba de búsqueda).
+.env ya existe y chroma_db/ está cargada con el ejemplo. Seguir con la tarea 1.3 (script de prueba de búsqueda) y luego rag.py.
