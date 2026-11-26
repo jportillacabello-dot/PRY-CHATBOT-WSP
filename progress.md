@@ -17,14 +17,14 @@
 - [x] requirements.txt (con python-multipart, docx2txt y pytest), .gitignore, .env.example
 - [x] .venv con dependencias instaladas
 - [x] Plantilla data/preguntas_prueba.csv (columnas pregunta,respuesta_esperada,fuente_esperada)
-- [x] Diagrama de pipeline con guardrails: diagramas/arquitectura-pipeline.html (hecho con diagramas/referencia/)
+- [x] Diagrama de pipeline con guardrails: diagramas/arquitectura-pipeline.html (hecho con referencias/diagramas/)
 - [x] Negocio de ejemplo (ficticio) en ejemplo/: docs (faq.md, politicas.txt, carta.pdf) y 20 preguntas
 - [x] ingesta.py: carga PDF/Word/TXT/MD, limpia encabezados y pies, trocea (800/100), guarda en ChromaDB con distancia coseno; reconstruye la colección en cada corrida
 - [x] tests/test_ingesta.py: 9 tests con embeddings falsos (sin costo)
 - [x] probar_busqueda.py (tarea 1.3): % de fuente correcta en top-k, rangos de distancia y umbral sugerido; sale con código 1 si no llega a 90 %
 - [x] prompt.txt (reglas) y rag.py: responder(pregunta) -> str, responder_con_detalle() para evaluar, umbral de relevancia, CLI con --csv
 - [x] tests/test_rag.py y tests/test_capas.py: 22 tests en total con LLM y embeddings falsos
-- [x] Guía general reutilizable: instrucciones/estructura-proyecto-rag.md
+- [x] Guía general reutilizable: referencias/estructura-proyecto-rag.md
 - [x] Estructura por carpetas aplicada: main.py, config.yaml, src/{ingestion,chunking,embeddings,vectordb,retrieval,prompts,llm,pipeline,evaluation,api,utils}, logs/. 48 tests OK; mismo resultado con OpenAI (18/18 búsqueda, 20/20 respuestas, máximo 3.3 s)
 
 ### Qué está en curso (What's In Progress)
@@ -52,9 +52,10 @@
 
 - **Harness con CLAUDE.md**: el proyecto se trabaja con Claude Code
 - **Fase 3 depende solo de Fase 0** en feature_list.json, para que Jenner trabaje en paralelo con una respuesta fija
-- **Estructura por carpetas (reemplaza la estructura plana anterior)**: se sigue `instrucciones/estructura-proyecto-rag.md`. Una carpeta por responsabilidad en `src/`, valores en `config.yaml`, entrada única `main.py`, dependencias verificadas por `tests/test_capas.py`. Equivalencias con evidencias anteriores: `ingesta.py` → `main.py ingestar`; `probar_busqueda.py` → `main.py probar-busqueda`; `rag.py --csv` → `main.py preguntar --csv`; `prompt.txt` → `src/prompts/system_prompt.txt`; `app.py` → `src/api/routes.py`; log → `logs/log_preguntas.csv`
+- **Estructura por carpetas (reemplaza la estructura plana anterior)**: se sigue `referencias/estructura-proyecto-rag.md`. Una carpeta por responsabilidad en `src/`, valores en `config.yaml`, entrada única `main.py`, dependencias verificadas por `tests/test_capas.py`. Equivalencias con evidencias anteriores: `ingesta.py` → `main.py ingestar`; `probar_busqueda.py` → `main.py probar-busqueda`; `rag.py --csv` → `main.py preguntar --csv`; `prompt.txt` → `src/prompts/system_prompt.txt`; `app.py` → `src/api/routes.py`; log → `logs/log_preguntas.csv`
 - **Diagramas fuera de docs/**: `docs/` solo tiene documentos del negocio porque la ingesta lee todo lo que hay ahí
-- **harness-kit/ fuera de git**: la skill instalada ya está en `.claude/skills/`
+- **harness-kit/ fuera de git** (en referencias/harness-kit/): la skill instalada ya está en `.claude/skills/`
+- **Material de referencia junto en referencias/**: guía RAG, plantilla de diagramas y harness-kit
 - **Fase 1 adelantada con datos de ejemplo**: el negocio ficticio de `ejemplo/` permite construir y probar la ingesta sin esperar la tarea 0.1
 - **Lectores propios (pypdf, docx2txt) en vez de los loaders de langchain-community**: ese paquete está en retiro; src/ingestion no lo usa
 - **Distancia coseno en ChromaDB**: el umbral de relevancia de retrieval/ se define sobre ella

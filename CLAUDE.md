@@ -9,7 +9,7 @@ MVP de un chatbot RAG en WhatsApp: responde las consultas de los clientes de un 
 
 ## Estructura
 
-Sigue la guía general [instrucciones/estructura-proyecto-rag.md](instrucciones/estructura-proyecto-rag.md) (carpetas, dependencias, configuración, estilo). Ante cualquier duda de dónde va algo, manda esa guía.
+Sigue la guía general [referencias/estructura-proyecto-rag.md](referencias/estructura-proyecto-rag.md) (carpetas, dependencias, configuración, estilo). Ante cualquier duda de dónde va algo, manda esa guía.
 
 ```
 ├── main.py          punto de entrada: ingestar · probar-busqueda · preguntar
@@ -26,8 +26,8 @@ Sigue la guía general [instrucciones/estructura-proyecto-rag.md](instrucciones/
 ├── logs/            log_preguntas.csv y logs (no van a git)
 ├── ejemplo/         negocio ficticio para probar sin datos reales
 ├── tests/           pytest (sin llamadas a OpenAI)
-├── instrucciones/   guías generales reutilizables
-├── diagramas/       arquitectura; referencia/ = guía y plantilla de diagramas
+├── referencias/     material de referencia: guía RAG, plantilla de diagramas, harness-kit (ver referencias/README.md)
+├── diagramas/       diagramas de arquitectura del proyecto
 ├── planificacion/   plan del MVP (README), Gantt (xlsx) e imagen
 ├── CLAUDE.md · feature_list.json · progress.md · session-handoff.md · init.sh   harness
 └── chroma_db/ · .venv/ · .env   generados o locales (no van a git)

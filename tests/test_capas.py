@@ -1,4 +1,4 @@
-"""Reglas de dependencias (instrucciones/estructura-proyecto-rag.md, sección 3)."""
+"""Reglas de dependencias (referencias/estructura-proyecto-rag.md, sección 3)."""
 
 import ast
 from pathlib import Path
