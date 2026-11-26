@@ -1,0 +1,25 @@
+# Claves: nunca al repositorio
+.env
+
+# Entorno de Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Base vectorial: se genera con ingesta.py
+chroma_db/
+
+# Log con consultas reales de clientes
+data/log_preguntas.csv
+
+# Copia de origen de la skill (la instalada está en .claude/skills/)
+harness-kit/
+
+# Configuración personal de Claude Code
+.claude/settings.local.json
+
+# Sistema
+.DS_Store
+Thumbs.db
+~$*

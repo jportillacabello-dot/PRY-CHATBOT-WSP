@@ -1,0 +1,60 @@
+{
+  "features": [
+    {
+      "id": "feat-000",
+      "name": "Fase 0 – Preparación",
+      "description": "Caso de uso definido, documentos en /docs, data/preguntas_prueba.csv con 20 preguntas, cuentas (OpenAI, Twilio, ngrok, GitHub, Render), venv, requirements.txt (incluye python-multipart) y .env en .gitignore. Responsable: Jenner. Fecha: 26–27 nov.",
+      "dependencies": [],
+      "status": "in-progress",
+      "evidence": "2026-11-26: repo git local, requirements.txt, .gitignore, .env.example, .venv instalado y bash init.sh OK. Falta: negocio, documentos, 20 preguntas, cuentas y repo remoto."
+    },
+    {
+      "id": "feat-001",
+      "name": "Fase 1 – Ingesta",
+      "description": "ingesta.py carga los documentos, los corta en chunks (~800 caracteres), genera embeddings con text-embedding-3-small y los guarda en /chroma_db. Terminado cuando la búsqueda trae el fragmento correcto para las 20 preguntas de prueba. Responsable: Jhonatan. Fecha: 28–30 nov.",
+      "dependencies": ["feat-000"],
+      "status": "not-started",
+      "evidence": ""
+    },
+    {
+      "id": "feat-002",
+      "name": "Fase 2 – Cadena RAG",
+      "description": "prompt.txt con las reglas (solo el negocio, decir 'no sé') y rag.py con responder(pregunta) -> str usando el retriever de ChromaDB y gpt-5-mini. Terminado con ≥ 18/20 correctas en consola. Responsable: Jhonatan. Fecha: 1–3 dic.",
+      "dependencies": ["feat-001"],
+      "status": "not-started",
+      "evidence": ""
+    },
+    {
+      "id": "feat-003",
+      "name": "Fase 3 – WhatsApp",
+      "description": "app.py con FastAPI y POST /whatsapp: lee Body, llama a responder() y devuelve TwiML. Twilio Sandbox + ngrok configurados. Terminado cuando el bot responde desde el celular. Se puede empezar con una respuesta fija antes de que exista rag.py. Responsable: Jenner. Fecha: 4–6 dic.",
+      "dependencies": ["feat-000"],
+      "status": "not-started",
+      "evidence": ""
+    },
+    {
+      "id": "feat-004",
+      "name": "Fase 4 – Calidad",
+      "description": "Log en data/log_preguntas.csv (número anonimizado), try/except con mensaje amable, validación de X-Twilio-Signature, respuestas cortas y evaluación ≥ 18/20 por WhatsApp. Responsable: Jenner. Fecha: 7–8 dic.",
+      "dependencies": ["feat-002", "feat-003"],
+      "status": "not-started",
+      "evidence": ""
+    },
+    {
+      "id": "feat-005",
+      "name": "Fase 5 – Despliegue",
+      "description": "Web Service en Render conectado a GitHub, variables de entorno cargadas, ChromaDB persistida (disco de pago o ingesta al arrancar) y webhook de Twilio apuntando a Render. Terminado cuando las 20 preguntas funcionan con la PC apagada. Responsable: Jenner. Fecha: 9–10 dic.",
+      "dependencies": ["feat-004"],
+      "status": "not-started",
+      "evidence": ""
+    },
+    {
+      "id": "feat-006",
+      "name": "Fase 6 – Cierre",
+      "description": "README final con instalación y diagramas C1/C2, video demo de 1–2 min y comparación de costos reales vs. presupuesto. Responsable: Jenner (Jhonatan apoya en la demo). Fecha: 11 dic.",
+      "dependencies": ["feat-005"],
+      "status": "not-started",
+      "evidence": ""
+    }
+  ]
+}

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arquitectura Chatbot RAG</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Basado en arquitectura-ref/plantilla.html */
+:root {
+  --bg: #FAFAF9; --fg: #1C1F1E; --muted: #6B7270; --line: #E2E5E3; --card: #F1F2F1;
+  --accent: #0F766E;
+  --step: #E6F2F0; --step-stroke: #0F766E;
+  --human: #FDF1E3; --human-stroke: #C2410C;
+  --data: #EEF2F8; --data-stroke: #475569;
+  --font: 'Inter', system-ui, Arial, sans-serif;
+  --display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #111413; --fg: #E8ECEA; --muted: #9AA3A0; --line: #2A302E; --card: #1B1F1E;
+  --accent: #2DD4BF;
+  --step: #16302C; --step-stroke: #2DD4BF;
+  --human: #3A2414; --human-stroke: #FB923C;
+  --data: #1A2230; --data-stroke: #94A3B8; color-scheme: dark } }
+
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); line-height: 1.55; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); }
+header .wrap { padding-block: 32px 20px; border-bottom: 2px solid var(--accent); }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+h1 { margin: 4px 0; font-family: var(--display); font-size: clamp(26px, 4vw, 36px); font-weight: 700; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 65ch; }
+main .wrap { padding-block: 24px; display: grid; gap: 16px; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; border: 1.5px solid; }
+.diagram { border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow-x: auto; }
+.diagram svg { display: block; width: 100%; min-width: 760px; height: auto; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.note { background: var(--card); border-left: 3px solid var(--accent); padding: 12px 14px; font-size: 13px; min-width: 0; }
+.note b { display: block; font-family: var(--display); font-weight: 600; margin-bottom: 2px; }
+
+/* SVG */
+.t  { fill: var(--fg); font-family: var(--font); font-size: 13px; font-weight: 500; }
+.tb { fill: var(--fg); font-family: var(--display); font-size: 14px; font-weight: 600; }
+.ts { fill: var(--muted); font-family: var(--font); font-size: 11.5px; }
+.cap { fill: var(--muted); font-family: var(--font); font-size: 11px; font-weight: 600; letter-spacing: .1em; }
+.ta { fill: var(--accent); font-family: var(--font); font-size: 11.5px; font-weight: 600; }
+.step  { fill: var(--step); stroke: var(--step-stroke); stroke-width: 1.3; }
+.human { fill: var(--human); stroke: var(--human-stroke); stroke-width: 1.3; }
+.guard { fill: var(--bg); stroke: var(--fg); stroke-width: 1.3; }
+.model { fill: var(--card); stroke: var(--muted); stroke-width: 1.3; }
+.data  { fill: var(--data); stroke: var(--data-stroke); stroke-width: 1.3; }
+.mem   { fill: var(--step); stroke: var(--accent); stroke-width: 2; }
+.obs   { fill: var(--card); stroke: var(--accent); stroke-width: 1.3; }
+.frame { fill: none; stroke: var(--fg); stroke-width: 1.2; }
+.ln  { stroke: var(--fg); stroke-width: 1.4; fill: none; }
+.lna { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+.dash { stroke-dasharray: 5 4; }
+.dot  { stroke-dasharray: 2 4; }
+.mk  { fill: var(--fg); }
+.mka { fill: var(--accent); }
+.ico { fill: none; stroke: var(--fg); stroke-width: 1.4; }
+.icof { fill: var(--fg); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <span class="eyebrow">MVP · Arquitectura IA · Vista de pipeline</span>
+    <h1>Chatbot RAG en WhatsApp</h1>
+    <p>Responde por WhatsApp las consultas de los clientes de un negocio usando solo sus documentos. Si la información no está, lo dice.</p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="legend">
+      <span><i class="sw" style="background:var(--step);border-color:var(--step-stroke)"></i>Paso del pipeline</span>
+      <span><i class="sw" style="background:var(--bg);border-color:var(--fg)"></i>Guardrail</span>
+      <span><i class="sw" style="background:var(--card);border-color:var(--muted)"></i>Modelo de IA</span>
+      <span><i class="sw" style="background:var(--data);border-color:var(--data-stroke)"></i>Datos</span>
+    </div>
+
+    <div class="diagram">
+      <svg viewBox="0 0 1000 740" role="img" aria-labelledby="dg-title">
+        <title id="dg-title">Pipeline del chatbot RAG: WhatsApp y Twilio, API FastAPI, búsqueda en ChromaDB y respuesta con gpt-5-mini</title>
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="mk"/></marker>
+          <marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="mka"/></marker>
+        </defs>
+
+        <!-- ENTRADA (arriba al centro) -->
+        <circle cx="480" cy="26" r="9" class="ico"/>
+        <path d="M464 56 a16 14 0 0 1 32 0" class="ico"/>
+        <text x="480" y="78" text-anchor="middle" class="tb">Cliente</text>
+        <line x1="480" y1="84" x2="480" y2="104" class="ln" marker-end="url(#ah)"/>
+        <rect x="390" y="106" width="180" height="36" rx="18" class="model"/>
+        <text x="480" y="129" text-anchor="middle" class="t">WhatsApp + Twilio</text>
+        <line x1="480" y1="142" x2="480" y2="193" class="ln" marker-end="url(#ah)"/>
+        <text x="492" y="160" class="ts">POST /whatsapp</text>
+
+        <!-- PIPELINE (centro) -->
+        <rect x="320" y="168" width="320" height="392" class="frame"/>
+        <text x="332" y="186" class="cap">API DEL BOT · FASTAPI</text>
+
+        <rect x="345" y="195" width="270" height="36" rx="18" class="guard"/>
+        <rect x="360" y="210" width="12" height="10" rx="1.5" class="icof"/>
+        <path d="M362 210 v-4 a4 4 0 0 1 8 0 v4" class="ico"/>
+        <text x="384" y="218" class="t">Firma X-Twilio-Signature</text>
+        <line x1="480" y1="231" x2="480" y2="248" class="ln" marker-end="url(#ah)"/>
+
+        <rect x="345" y="250" width="270" height="46" rx="4" class="step"/>
+        <text x="480" y="270" text-anchor="middle" class="tb">Leer mensaje</text>
+        <text x="480" y="287" text-anchor="middle" class="ts">app.py · campo Body</text>
+        <line x1="480" y1="296" x2="480" y2="313" class="ln" marker-end="url(#ah)"/>
+
+        <rect x="345" y="315" width="270" height="46" rx="4" class="step"/>
+        <text x="480" y="335" text-anchor="middle" class="tb">Búsqueda</text>
+        <text x="480" y="352" text-anchor="middle" class="ts">rag.py · 3–4 fragmentos más parecidos</text>
+        <line x1="480" y1="361" x2="480" y2="378" class="ln" marker-end="url(#ah)"/>
+
+        <rect x="345" y="380" width="270" height="46" rx="4" class="step"/>
+        <text x="480" y="400" text-anchor="middle" class="tb">Armar el prompt</text>
+        <text x="480" y="417" text-anchor="middle" class="ts">rag.py · reglas + fragmentos + pregunta</text>
+        <line x1="480" y1="426" x2="480" y2="443" class="ln" marker-end="url(#ah)"/>
+
+        <rect x="345" y="445" width="270" height="46" rx="4" class="step"/>
+        <text x="480" y="465" text-anchor="middle" class="tb">Generación</text>
+        <text x="480" y="482" text-anchor="middle" class="ts">rag.py · responder(pregunta)</text>
+        <line x1="480" y1="491" x2="480" y2="508" class="ln" marker-end="url(#ah)"/>
+
+        <rect x="345" y="510" width="270" height="36" rx="18" class="guard"/>
+        <rect x="360" y="525" width="12" height="10" rx="1.5" class="icof"/>
+        <path d="M362 525 v-4 a4 4 0 0 1 8 0 v4" class="ico"/>
+        <text x="384" y="533" class="t">Respuesta corta en TwiML</text>
+
+        <!-- SALIDA (abajo al centro) -->
+        <line x1="480" y1="546" x2="480" y2="585" class="ln" marker-end="url(#ah)"/>
+        <rect x="370" y="587" width="220" height="40" rx="4" class="step"/>
+        <text x="480" y="612" text-anchor="middle" class="tb">Respuesta en WhatsApp</text>
+
+        <!-- MODELOS (izquierda) -->
+        <text x="135" y="296" text-anchor="middle" class="cap">OPENAI API</text>
+        <line x1="345" y1="338" x2="232" y2="338" class="ln dash" marker-start="url(#ah)" marker-end="url(#ah)"/>
+        <line x1="345" y1="468" x2="232" y2="468" class="ln dash" marker-start="url(#ah)" marker-end="url(#ah)"/>
+
+        <rect x="40" y="310" width="190" height="56" rx="4" class="model"/>
+        <text x="135" y="334" text-anchor="middle" class="tb">Embeddings</text>
+        <text x="135" y="352" text-anchor="middle" class="ts">text-embedding-3-small</text>
+
+        <rect x="40" y="440" width="190" height="56" rx="4" class="model"/>
+        <text x="135" y="464" text-anchor="middle" class="tb">LLM · gpt-5-mini</text>
+        <text x="135" y="482" text-anchor="middle" class="ts">redacta la respuesta</text>
+
+        <!-- DATOS (derecha) -->
+        <text x="830" y="70" text-anchor="middle" class="cap">PREPARADO ANTES</text>
+        <rect x="730" y="84" width="200" height="40" rx="4" class="data"/>
+        <path d="M744 94 h10 l5 5 v16 h-15 z" class="ico"/>
+        <text x="768" y="109" class="t">Docs del negocio</text>
+        <line x1="830" y1="124" x2="830" y2="146" class="ln" marker-end="url(#ah)"/>
+        <rect x="730" y="148" width="200" height="56" rx="4" class="step"/>
+        <text x="830" y="172" text-anchor="middle" class="tb">Ingesta</text>
+        <text x="830" y="190" text-anchor="middle" class="ts">ingesta.py · chunks ~800</text>
+        <line x1="830" y1="204" x2="830" y2="290" class="ln" marker-end="url(#ah)"/>
+        <text x="842" y="252" class="ts">embeddings</text>
+
+        <path d="M745 302 v52 a85 10 0 0 0 170 0 v-52" class="data"/>
+        <ellipse cx="830" cy="302" rx="85" ry="10" class="data"/>
+        <text x="830" y="334" text-anchor="middle" class="tb">ChromaDB</text>
+        <text x="830" y="351" text-anchor="middle" class="ts">/chroma_db en disco</text>
+        <line x1="617" y1="338" x2="743" y2="338" class="ln" marker-start="url(#ah)"/>
+
+        <rect x="730" y="380" width="200" height="46" rx="4" class="data"/>
+        <path d="M744 388 h10 l5 5 v16 h-15 z" class="ico"/>
+        <text x="768" y="400" class="t">prompt.txt</text>
+        <text x="768" y="416" class="ts">reglas: no inventar</text>
+        <line x1="617" y1="403" x2="728" y2="403" class="ln" marker-start="url(#ah)"/>
+
+        <!-- MONITOREO (franja inferior) -->
+        <line x1="480" y1="627" x2="480" y2="658" class="ln dot" marker-end="url(#ah)"/>
+        <rect x="40" y="660" width="920" height="56" rx="4" class="obs"/>
+        <text x="60" y="684" class="tb">Log y evaluación</text>
+        <text x="60" y="703" class="ts">data/log_preguntas.csv (número anonimizado) · 20 preguntas de prueba, meta ≥ 18/20 · costo por consulta</text>
+      </svg>
+    </div>
+
+    <div class="notes">
+      <div class="note"><b>Capas del código</b>Entrada: <code>app.py</code> (webhook, firma, TwiML). Lógica: <code>rag.py</code> (búsqueda, prompt, respuesta). Datos: <code>ingesta.py</code>, ChromaDB y <code>prompt.txt</code>.</div>
+      <div class="note"><b>Contrato entre los dos</b><code>app.py</code> solo llama a <code>responder(pregunta) -&gt; str</code>. Mientras no exista, usa una respuesta fija y se trabaja en paralelo.</div>
+      <div class="note"><b>No inventa</b>El prompt obliga a usar solo los fragmentos recuperados. Es lo que pide la política de WhatsApp para bots de atención al cliente.</div>
+      <div class="note"><b>Límites del webhook</b>Twilio envía un formulario (requiere <code>python-multipart</code>) y espera la respuesta en menos de 15 s.</div>
+      <div class="note"><b>Dónde corre</b>Pruebas: PC + ngrok. Producción: Render, con ChromaDB en disco persistente o reconstruida al arrancar.</div>
+      <div class="note"><b>Fuera del MVP</b>Memoria de conversación, audios e imágenes, panel de administración y varios negocios.</div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

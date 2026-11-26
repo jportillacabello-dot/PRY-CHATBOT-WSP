@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-multipart
+twilio
+langchain
+langchain-openai
+langchain-chroma
+langchain-community
+chromadb
+openai
+python-dotenv
+pypdf
+docx2txt
+pytest
