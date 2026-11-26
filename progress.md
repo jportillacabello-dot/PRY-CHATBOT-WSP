@@ -17,7 +17,7 @@
 - [x] requirements.txt (con python-multipart, docx2txt y pytest), .gitignore, .env.example
 - [x] .venv con dependencias instaladas
 - [x] Plantilla data/preguntas_prueba.csv (columnas pregunta,respuesta_esperada,fuente_esperada)
-- [x] Diagrama de pipeline con guardrails: diagramas/arquitectura-pipeline.html (hecho con arquitectura-ref/)
+- [x] Diagrama de pipeline con guardrails: diagramas/arquitectura-pipeline.html (hecho con diagramas/referencia/)
 - [x] Negocio de ejemplo (ficticio) en ejemplo/: docs (faq.md, politicas.txt, carta.pdf) y 20 preguntas
 - [x] ingesta.py: carga PDF/Word/TXT/MD, limpia encabezados y pies, trocea (800/100), guarda en ChromaDB con distancia coseno; reconstruye la colección en cada corrida
 - [x] tests/test_ingesta.py: 9 tests con embeddings falsos (sin costo)

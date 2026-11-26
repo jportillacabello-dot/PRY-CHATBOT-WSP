@@ -2,10 +2,26 @@
 
 MVP de un chatbot RAG en WhatsApp: responde las consultas de los clientes de un negocio usando **solo** sus documentos (Twilio → FastAPI → ChromaDB → gpt-5-mini → TwiML).
 
-- Plan, arquitectura C1/C2, herramientas y presupuesto: [README_MVP_Chatbot_RAG_WhatsApp.md](README_MVP_Chatbot_RAG_WhatsApp.md)
-- Fechas, horas y responsables por paso: `Plan_MVP_Chatbot_RAG_WhatsApp.xlsx`
+- Plan, arquitectura C1/C2, herramientas y presupuesto: [planificacion/README_MVP_Chatbot_RAG_WhatsApp.md](planificacion/README_MVP_Chatbot_RAG_WhatsApp.md)
+- Fechas, horas y responsables por paso: `planificacion/Plan_MVP_Chatbot_RAG_WhatsApp.xlsx`
 - Equipo: Jhonatan (Fases 1–2: ingesta + RAG) · Jenner (Fases 0, 3–6: preparación, WhatsApp, calidad, despliegue, cierre)
 - Plazo: 26-nov → 11-dic-2026 · Meta de calidad: ≥ 18/20 preguntas de prueba correctas
+
+## Estructura
+
+```
+├── app.py · rag.py · ingesta.py · probar_busqueda.py · prompt.txt   código (plano, por capas)
+├── docs/            documentos del negocio: ingesta.py lee TODO lo que hay aquí
+├── data/            preguntas_prueba.csv y log_preguntas.csv
+├── ejemplo/         negocio ficticio para probar sin datos reales
+├── tests/           pytest (sin llamadas a OpenAI)
+├── diagramas/       diagramas de arquitectura; referencia/ = guía y plantilla
+├── planificacion/   plan del MVP (README), Gantt (xlsx) e imagen
+├── CLAUDE.md · feature_list.json · progress.md · session-handoff.md · init.sh   harness
+└── chroma_db/ · .venv/ · .env   generados o locales (no van a git)
+```
+
+Nada que no sea un documento del negocio va en `docs/`. El código se queda en la raíz: Render arranca `app.py` desde ahí y los imports son directos.
 
 ## Flujo de inicio (Startup Workflow)
 
