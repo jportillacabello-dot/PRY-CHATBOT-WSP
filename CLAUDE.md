@@ -50,6 +50,13 @@ Si la verificación base falla, arréglala primero antes de añadir alcance nuev
 
 - **Autoría**: nunca incluyas a Claude como autor ni contribuidor. Nada de `Co-Authored-By: Claude`, "Generated with Claude Code" ni menciones similares en commits, pull requests, README, código o documentación.
 - **Capas e imports**: tres capas en archivos planos, sin carpetas extra. Entrada (`app.py`) → lógica (`rag.py`) → datos (`ingesta.py`, `chroma_db/`, `prompt.txt`). Los imports van solo en ese sentido: `rag.py` e `ingesta.py` nunca importan FastAPI ni Twilio, y `app.py` solo usa `responder()` de `rag.py`.
+- **Estilo de código**: cada archivo de `src/` se lee de arriba abajo en el orden del flujo, dividido en secciones con este encabezado:
+  ```python
+  # =====================================================================
+  # == PASO 1: Objetivo del paso — qué hace en pocas palabras ==
+  # =====================================================================
+  ```
+  Primero `CONFIGURACIÓN`, luego `PASO 1…N` y al final `EJECUCIÓN` (el `main`). Los subpasos dentro de una función se marcan con `# 1.1 …`, `# 1.2 …`. El docstring del módulo lista los pasos.
 - **Cierre del proyecto**: al terminar el MVP (Fase 6), `CLAUDE.md` y la carpeta `.claude/` salen del repositorio y de su historial:
   1. Agregar `CLAUDE.md` y `.claude/` a `.gitignore`.
   2. Reescribir el historial con `git filter-repo --path CLAUDE.md --path .claude --invert-paths` (se instala con `pip install git-filter-repo`), trabajando sobre una copia del repo. Revisar también los mensajes de commit que nombran esos archivos.

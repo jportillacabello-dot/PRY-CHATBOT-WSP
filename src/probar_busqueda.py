@@ -9,6 +9,12 @@ Uso:
 
 El CSV necesita las columnas `pregunta` y `fuente_esperada` (nombre del archivo
 donde está la respuesta; vacía si la respuesta no está en los documentos).
+
+Pasos:
+    1. Leer preguntas      el CSV de prueba
+    2. Buscar              los K fragmentos de cada pregunta y marcar aciertos
+    3. Sugerir umbral      a partir de las distancias de ambos grupos
+    4. Informe             tabla, % de aciertos y umbral sugerido
 """
 
 from __future__ import annotations
@@ -24,6 +30,11 @@ from langchain_chroma import Chroma
 import ingesta
 import rag
 
+
+# =====================================================================
+# == CONFIGURACIÓN: archivo de preguntas, meta y margen del umbral ==
+# =====================================================================
+
 PREGUNTAS = ingesta.RAIZ / "data" / "preguntas_prueba.csv"
 META_ACIERTO = 0.9  # 18 de 20
 MARGEN_UMBRAL = 0.05
@@ -31,6 +42,8 @@ MARGEN_UMBRAL = 0.05
 
 @dataclass
 class Resultado:
+    """Lo que trajo la búsqueda para una pregunta."""
+
     pregunta: str
     fuente_esperada: str  # "" = la respuesta no está en los documentos
     fuentes: list[str]
@@ -45,6 +58,10 @@ class Resultado:
         return self.fuente_esperada in self.fuentes
 
 
+# =====================================================================
+# == PASO 1: Leer preguntas — el CSV con la fuente esperada ==
+# =====================================================================
+
 def leer_preguntas(ruta: Path) -> list[dict]:
     with open(ruta, encoding="utf-8", newline="") as archivo:
         filas = [f for f in csv.DictReader(archivo) if (f.get("pregunta") or "").strip()]
@@ -53,10 +70,14 @@ def leer_preguntas(ruta: Path) -> list[dict]:
     return filas
 
 
+# =====================================================================
+# == PASO 2: Buscar — los K fragmentos de cada pregunta ==
+# =====================================================================
+
 def evaluar(filas: list[dict], base: Chroma, k: int = rag.K) -> list[Resultado]:
     resultados = []
     for fila in filas:
-        encontrados = rag.buscar(fila["pregunta"], base, k)
+        encontrados = rag.buscar(fila["pregunta"], base, k)  # misma búsqueda que usa el bot
         resultados.append(
             Resultado(
                 pregunta=fila["pregunta"].strip(),
@@ -67,6 +88,10 @@ def evaluar(filas: list[dict], base: Chroma, k: int = rag.K) -> list[Resultado]:
         )
     return resultados
 
+
+# =====================================================================
+# == PASO 3: Sugerir umbral — separar preguntas con y sin respuesta ==
+# =====================================================================
 
 def sugerir_umbral(resultados: list[Resultado]) -> tuple[float | None, bool]:
     """Devuelve (umbral, separa_bien).
@@ -81,13 +106,20 @@ def sugerir_umbral(resultados: list[Resultado]) -> tuple[float | None, bool]:
     sin_respuesta = [r.distancia for r in resultados if not r.tiene_respuesta]
     if not validas:
         return None, False
+    # Caso 1: los grupos no se tocan -> punto medio
     if sin_respuesta and min(sin_respuesta) > max(validas):
         return round((max(validas) + min(sin_respuesta)) / 2, 2), True
+    # Caso 2: se mezclan -> no perder ninguna válida
     return round(max(validas) + MARGEN_UMBRAL, 2), False
 
 
+# =====================================================================
+# == PASO 4: Informe — tabla, % de aciertos y umbral sugerido ==
+# =====================================================================
+
 def imprimir_informe(resultados: list[Resultado], k: int) -> bool:
     """Imprime la tabla y el resumen. Devuelve True si se cumple la meta."""
+    # 4.1 Una línea por pregunta: OK, NO o -- (sin respuesta esperada)
     for r in resultados:
         if r.tiene_respuesta:
             marca = "OK" if r.acierto else "NO"
@@ -95,6 +127,7 @@ def imprimir_informe(resultados: list[Resultado], k: int) -> bool:
             marca = "--"
         print(f"{marca}  dist={r.distancia:.3f}  top={r.fuentes[0] if r.fuentes else '-':<16} {r.pregunta}")
 
+    # 4.2 Porcentaje de aciertos contra la meta
     con_respuesta = [r for r in resultados if r.tiene_respuesta]
     aciertos = sum(r.acierto for r in con_respuesta)
     tasa = aciertos / len(con_respuesta) if con_respuesta else 0.0
@@ -105,6 +138,7 @@ def imprimir_informe(resultados: list[Resultado], k: int) -> bool:
         if not r.acierto:
             print(f"  Falla: «{r.pregunta}» esperaba {r.fuente_esperada}, trajo {r.fuentes}")
 
+    # 4.3 Rangos de distancia de cada grupo
     validas = [r.distancia for r in con_respuesta]
     sin_respuesta = [r for r in resultados if not r.tiene_respuesta]
     if validas:
@@ -113,6 +147,7 @@ def imprimir_informe(resultados: list[Resultado], k: int) -> bool:
         d = [r.distancia for r in sin_respuesta]
         print(f"Distancia del más cercano, preguntas sin respuesta: {min(d):.2f} – {max(d):.2f}")
 
+    # 4.4 Umbral sugerido (PASO 3) y qué preguntas tendrá que cubrir el prompt
     umbral, separa = sugerir_umbral(resultados)
     if umbral is not None:
         print(f"Umbral sugerido para rag.py: {umbral} (actual: {rag.UMBRAL_DISTANCIA})")
@@ -121,6 +156,10 @@ def imprimir_informe(resultados: list[Resultado], k: int) -> bool:
             print(f"  El umbral no filtra {len(debajo)} pregunta(s) sin respuesta; las debe cubrir el prompt: {debajo}")
     return cumple
 
+
+# =====================================================================
+# == EJECUCIÓN: correr los pasos 1 a 4 desde la consola ==
+# =====================================================================
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Mide si la búsqueda trae el fragmento correcto.")
@@ -131,14 +170,17 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.reconfigure(encoding="utf-8")
 
     try:
+        # PASO 1: leer preguntas
         filas = leer_preguntas(args.preguntas)
         if not filas:
             print(f"ERROR: {ingesta.mostrar(args.preguntas)} no tiene preguntas. Complétalo o usa --preguntas ejemplo/preguntas_prueba.csv")
             return 1
+        # PASO 2: buscar cada pregunta
         resultados = evaluar(filas, rag.abrir_base(), args.k)
     except (FileNotFoundError, ValueError, RuntimeError) as error:
         print(f"ERROR: {error}")
         return 1
+    # PASOS 3 y 4: umbral e informe (código de salida 1 si no se cumple la meta)
     return 0 if imprimir_informe(resultados, args.k) else 1
 
 

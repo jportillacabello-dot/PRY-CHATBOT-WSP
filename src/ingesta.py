@@ -8,6 +8,14 @@ Uso:
 
 Cada ejecución reconstruye la colección desde cero, así que se puede correr
 todas las veces que cambien los documentos sin duplicar fragmentos.
+
+Pasos:
+    1. Leer archivos        PDF, Word, TXT y Markdown -> texto por página
+    2. Limpiar texto        quitar encabezados, pies, números de página y espacios
+    3. Cargar documentos    recorrer la carpeta y armar un Document por página
+    4. Trocear              cortar en fragmentos de ~800 caracteres
+    5. Embeddings           preparar el modelo de OpenAI que convierte texto en vectores
+    6. Guardar en ChromaDB  borrar la colección anterior y guardar los fragmentos
 """
 
 from __future__ import annotations
@@ -25,13 +33,18 @@ from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+
+# =====================================================================
+# == CONFIGURACIÓN: rutas, modelo y tamaño de los fragmentos ==
+# =====================================================================
+
 RAIZ = Path(__file__).resolve().parent.parent  # raíz del proyecto
-DOCS_DIR = RAIZ / "docs"
-CHROMA_DIR = RAIZ / "chroma_db"
+DOCS_DIR = RAIZ / "docs"                       # documentos del negocio
+CHROMA_DIR = RAIZ / "chroma_db"                # base vectorial generada
 COLECCION = "negocio"
 MODELO_EMBEDDINGS = "text-embedding-3-small"
-CHUNK_SIZE = 800
-CHUNK_OVERLAP = 100
+CHUNK_SIZE = 800                               # caracteres por fragmento
+CHUNK_OVERLAP = 100                            # caracteres compartidos entre fragmentos vecinos
 EXTENSIONES = {".pdf", ".docx", ".txt", ".md"}
 # Distancia coseno: el umbral de relevancia de rag.py se calcula sobre ella.
 METADATA_COLECCION = {"hnsw:space": "cosine"}
@@ -49,43 +62,11 @@ def mostrar(ruta: Path) -> str:
         return ruta.as_posix()
 
 
-# ---------------------------------------------------------------- limpieza
-
-def normalizar(texto: str) -> str:
-    """Quita espacios repetidos y deja como máximo una línea en blanco seguida."""
-    lineas = [re.sub(r"[ \t ]+", " ", linea).strip() for linea in texto.splitlines()]
-    texto = "\n".join(lineas)
-    return re.sub(r"\n{3,}", "\n\n", texto).strip()
-
-
-def limpiar_paginas(paginas: list[str]) -> list[str]:
-    """Quita encabezados, pies y números de página de un documento de varias páginas.
-
-    Una línea que aparece en al menos el 60 % de las páginas (con 3 o más
-    páginas) se considera encabezado o pie y se elimina.
-    """
-    repetidas: set[str] = set()
-    if len(paginas) >= 3:
-        conteo = Counter(
-            linea.strip()
-            for pagina in paginas
-            for linea in set(pagina.splitlines())
-            if linea.strip()
-        )
-        repetidas = {linea for linea, n in conteo.items() if n >= 0.6 * len(paginas)}
-
-    limpias = []
-    for pagina in paginas:
-        lineas = [
-            linea
-            for linea in pagina.splitlines()
-            if linea.strip() not in repetidas and not _NUMERO_PAGINA.match(linea.strip())
-        ]
-        limpias.append(normalizar("\n".join(lineas)))
-    return limpias
-
-
-# ------------------------------------------------------------------ carga
+# =====================================================================
+# == PASO 1: Leer archivos — sacar el texto de cada formato ==
+# =====================================================================
+# Cada lector devuelve una lista de textos: una entrada por página en los
+# PDF y una sola entrada para los demás formatos.
 
 def _leer_pdf(ruta: Path) -> list[str]:
     from pypdf import PdfReader
@@ -106,6 +87,50 @@ def _leer_texto(ruta: Path) -> list[str]:
 _LECTORES = {".pdf": _leer_pdf, ".docx": _leer_docx, ".txt": _leer_texto, ".md": _leer_texto}
 
 
+# =====================================================================
+# == PASO 2: Limpiar texto — quitar ruido que confunde la búsqueda ==
+# =====================================================================
+
+def normalizar(texto: str) -> str:
+    """Quita espacios repetidos y deja como máximo una línea en blanco seguida."""
+    lineas = [re.sub(r"[ \t ]+", " ", linea).strip() for linea in texto.splitlines()]
+    texto = "\n".join(lineas)
+    return re.sub(r"\n{3,}", "\n\n", texto).strip()
+
+
+def limpiar_paginas(paginas: list[str]) -> list[str]:
+    """Quita encabezados, pies y números de página de un documento de varias páginas.
+
+    Una línea que aparece en al menos el 60 % de las páginas (con 3 o más
+    páginas) se considera encabezado o pie y se elimina.
+    """
+    # 2.1 Detectar líneas repetidas en casi todas las páginas (encabezados y pies)
+    repetidas: set[str] = set()
+    if len(paginas) >= 3:
+        conteo = Counter(
+            linea.strip()
+            for pagina in paginas
+            for linea in set(pagina.splitlines())
+            if linea.strip()
+        )
+        repetidas = {linea for linea, n in conteo.items() if n >= 0.6 * len(paginas)}
+
+    # 2.2 Quitar esas líneas y los números de página, y normalizar espacios
+    limpias = []
+    for pagina in paginas:
+        lineas = [
+            linea
+            for linea in pagina.splitlines()
+            if linea.strip() not in repetidas and not _NUMERO_PAGINA.match(linea.strip())
+        ]
+        limpias.append(normalizar("\n".join(lineas)))
+    return limpias
+
+
+# =====================================================================
+# == PASO 3: Cargar documentos — recorrer la carpeta y armar Documents ==
+# =====================================================================
+
 def cargar_documentos(carpeta: Path) -> list[Document]:
     """Lee los PDF, Word, TXT y Markdown de la carpeta (y subcarpetas).
 
@@ -118,6 +143,7 @@ def cargar_documentos(carpeta: Path) -> list[Document]:
 
     documentos: list[Document] = []
     for ruta in sorted(carpeta.rglob("*")):
+        # 3.1 Saltar ocultos (.gitkeep), temporales de Office (~$) y formatos no soportados
         if not ruta.is_file() or ruta.name.startswith((".", "~$")):
             continue
         extension = ruta.suffix.lower()
@@ -125,18 +151,23 @@ def cargar_documentos(carpeta: Path) -> list[Document]:
             print(f"  [omitido] {ruta.relative_to(carpeta)}: formato no soportado")
             continue
 
+        # 3.2 Leer (PASO 1) y limpiar (PASO 2)
         paginas = limpiar_paginas(_LECTORES[extension](ruta))
         fuente = ruta.relative_to(carpeta).as_posix()
         if not any(paginas):
             print(f"  [aviso] {fuente}: no tiene texto (¿PDF escaneado?)")
             continue
+
+        # 3.3 Un Document por página, con su origen en la metadata
         for numero, texto in enumerate(paginas, start=1):
             if texto:
                 documentos.append(Document(page_content=texto, metadata={"fuente": fuente, "pagina": numero}))
     return documentos
 
 
-# ---------------------------------------------------------------- troceado
+# =====================================================================
+# == PASO 4: Trocear — cortar los documentos en fragmentos ==
+# =====================================================================
 
 def trocear(
     documentos: list[Document],
@@ -144,12 +175,15 @@ def trocear(
     chunk_overlap: int = CHUNK_OVERLAP,
 ) -> list[Document]:
     """Corta los documentos en fragmentos y numera cada uno dentro de su fuente."""
+    # 4.1 Cortar respetando primero párrafos, luego líneas, frases y palabras
     separador = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         separators=["\n\n", "\n", ". ", " ", ""],
     )
     fragmentos = separador.split_documents(documentos)
+
+    # 4.2 Numerar los fragmentos de cada archivo (sirve para armar ids estables)
     por_fuente: Counter[str] = Counter()
     for fragmento in fragmentos:
         fuente = fragmento.metadata["fuente"]
@@ -158,33 +192,9 @@ def trocear(
     return fragmentos
 
 
-# ---------------------------------------------------------- base vectorial
-
-def construir_base(
-    fragmentos: list[Document],
-    embeddings: Embeddings,
-    destino: Path = CHROMA_DIR,
-    coleccion: str = COLECCION,
-) -> Chroma:
-    """Borra la colección (si existe) y la vuelve a crear con los fragmentos."""
-    cliente = chromadb.PersistentClient(
-        path=str(destino),
-        settings=chromadb.config.Settings(anonymized_telemetry=False),
-    )
-    if coleccion in [c.name for c in cliente.list_collections()]:
-        cliente.delete_collection(coleccion)
-
-    base = Chroma(
-        client=cliente,
-        collection_name=coleccion,
-        embedding_function=embeddings,
-        collection_metadata=METADATA_COLECCION,
-    )
-    ids = [f"{f.metadata['fuente']}#p{f.metadata['pagina']}#f{f.metadata['fragmento']}" for f in fragmentos]
-    if fragmentos:
-        base.add_documents(fragmentos, ids=ids)
-    return base
-
+# =====================================================================
+# == PASO 5: Embeddings — modelo de OpenAI que convierte texto en vectores ==
+# =====================================================================
 
 def verificar_clave() -> None:
     """Carga .env y falla con un mensaje claro si no hay OPENAI_API_KEY."""
@@ -203,7 +213,43 @@ def crear_embeddings() -> Embeddings:
     return OpenAIEmbeddings(model=MODELO_EMBEDDINGS)
 
 
-# ------------------------------------------------------------------ main
+# =====================================================================
+# == PASO 6: Guardar en ChromaDB — reconstruir la colección desde cero ==
+# =====================================================================
+
+def construir_base(
+    fragmentos: list[Document],
+    embeddings: Embeddings,
+    destino: Path = CHROMA_DIR,
+    coleccion: str = COLECCION,
+) -> Chroma:
+    """Borra la colección (si existe) y la vuelve a crear con los fragmentos."""
+    # 6.1 Abrir la base en disco
+    cliente = chromadb.PersistentClient(
+        path=str(destino),
+        settings=chromadb.config.Settings(anonymized_telemetry=False),
+    )
+
+    # 6.2 Borrar la colección anterior para no duplicar fragmentos
+    if coleccion in [c.name for c in cliente.list_collections()]:
+        cliente.delete_collection(coleccion)
+
+    # 6.3 Crear la colección con distancia coseno y guardar los fragmentos
+    base = Chroma(
+        client=cliente,
+        collection_name=coleccion,
+        embedding_function=embeddings,
+        collection_metadata=METADATA_COLECCION,
+    )
+    ids = [f"{f.metadata['fuente']}#p{f.metadata['pagina']}#f{f.metadata['fragmento']}" for f in fragmentos]
+    if fragmentos:
+        base.add_documents(fragmentos, ids=ids)  # aquí se llama a OpenAI
+    return base
+
+
+# =====================================================================
+# == EJECUCIÓN: correr los pasos 3 a 6 desde la consola ==
+# =====================================================================
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Carga los documentos del negocio en ChromaDB.")
@@ -215,6 +261,7 @@ def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")  # tildes correctas también en Git Bash
 
+    # PASO 3: cargar (incluye leer y limpiar)
     print(f"Leyendo documentos de {mostrar(args.docs)}/")
     try:
         documentos = cargar_documentos(args.docs)
@@ -225,17 +272,20 @@ def main(argv: list[str] | None = None) -> int:
         print("ERROR: no se encontró texto. Agrega PDF, Word, TXT o Markdown a la carpeta.")
         return 1
 
+    # PASO 4: trocear
     fragmentos = trocear(documentos, args.chunk_size, args.overlap)
     fuentes = sorted({d.metadata["fuente"] for d in documentos})
     caracteres = sum(len(f.page_content) for f in fragmentos)
     print(f"  {len(fuentes)} archivos, {len(documentos)} páginas, {len(fragmentos)} fragmentos")
 
+    # PASO 5: preparar embeddings (falla aquí si no hay clave)
     try:
         embeddings = crear_embeddings()
     except RuntimeError as error:
         print(f"ERROR: {error}")
         return 1
 
+    # PASO 6: guardar en ChromaDB
     construir_base(fragmentos, embeddings, args.destino)
     # Aproximación: 1 token ≈ 4 caracteres; text-embedding-3-small cuesta $0.02 por 1M tokens.
     costo = caracteres / 4 / 1_000_000 * 0.02
