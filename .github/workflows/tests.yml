@@ -12,12 +12,15 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Descargar el código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - name: Instalar Python (versión de .python-version)
-        uses: actions/setup-python@v5
+      # "3.11" = la última 3.11 que GitHub tenga para su Ubuntu. No se usa
+      # .python-version (3.11.9) porque GitHub no publica esa versión exacta
+      # para Ubuntu 26.04; .python-version queda para Render y el equipo local.
+      - name: Instalar Python 3.11
+        uses: actions/setup-python@v7
         with:
-          python-version-file: .python-version
+          python-version: "3.11"
           cache: pip
 
       - name: Instalar dependencias
