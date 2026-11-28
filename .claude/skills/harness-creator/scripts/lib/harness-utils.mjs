@@ -345,9 +345,12 @@ export async function loadHarnessFiles(root) {
   ];
   const files = [];
   for (const candidate of candidates) {
-    const fullPath = path.join(root, candidate);
-    if (await exists(fullPath)) {
-      files.push({ path: candidate, content: await readText(fullPath) });
+    // Busca en la raíz y, si no está, en harness/ (ajuste local de este proyecto)
+    for (const fullPath of [path.join(root, candidate), path.join(root, 'harness', candidate)]) {
+      if (await exists(fullPath)) {
+        files.push({ path: candidate, content: await readText(fullPath) });
+        break;
+      }
     }
   }
   return files;

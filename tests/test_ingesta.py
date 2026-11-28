@@ -16,7 +16,7 @@ from src.pipeline.ingest_pipeline import ingestar
 from src.vectordb.vector_store import construir_base
 
 RAIZ = Path(__file__).resolve().parent.parent
-EJEMPLO = RAIZ / "ejemplo" / "docs"
+EJEMPLO = RAIZ / "data" / "ejemplo" / "documentos"
 
 
 @pytest.fixture

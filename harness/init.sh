@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Correr siempre desde la raíz del proyecto, aunque se llame desde otra carpeta
+cd "$(dirname "$0")/.."
+
 echo "=== Inicialización del harness: Chatbot RAG WhatsApp ==="
 
 PY="$(command -v python3 || command -v python || true)"
@@ -22,7 +25,7 @@ fi
 "$PY" --version
 
 echo "=== Estado del harness ==="
-"$PY" -c "import json; d=json.load(open('feature_list.json', encoding='utf-8')); print('feature_list.json OK:', len(d['features']), 'funcionalidades')"
+"$PY" -c "import json; d=json.load(open('harness/feature_list.json', encoding='utf-8')); print('harness/feature_list.json OK:', len(d['features']), 'funcionalidades')"
 
 echo "=== Chequeos de seguridad ==="
 if [ -f .env ]; then
@@ -54,7 +57,7 @@ fi
 echo "=== Verificación completa ==="
 echo ""
 echo "Próximos pasos (Next steps):"
-echo "1. Lee feature_list.json para ver el estado actual de las fases"
+echo "1. Lee harness/feature_list.json para ver el estado actual de las fases"
 echo "2. Elige UNA funcionalidad sin terminar cuyas dependencias estén en done"
 echo "3. Implementa solo esa funcionalidad"
 echo "4. Vuelve a verificar antes de decir que está terminada"

@@ -1,4 +1,4 @@
-"""Pipeline de ingesta: docs/ -> fragmentos -> embeddings -> ChromaDB.
+"""Pipeline de ingesta: data/documentos/ -> fragmentos -> embeddings -> ChromaDB.
 
 Cada ejecución reconstruye la colección desde cero, así que se puede correr
 todas las veces que cambien los documentos sin duplicar fragmentos.
@@ -28,7 +28,7 @@ from src.vectordb.vector_store import CHROMA_DIR, construir_base
 # == CONFIGURACIÓN: carpeta de documentos y costo de los embeddings ==
 # =====================================================================
 
-DOCS_DIR = ruta("docs")
+DOCS_DIR = ruta("documentos")
 COSTO_POR_MILLON = CONFIG["embeddings"]["costo_por_millon"]
 
 

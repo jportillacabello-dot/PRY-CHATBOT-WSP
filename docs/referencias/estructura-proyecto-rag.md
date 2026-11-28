@@ -44,9 +44,16 @@ mi-proyecto/
 │   └── utils/             configuración y funciones comunes
 │       ├── config.py
 │       └── helpers.py
-├── docs/                  documentos fuente que se indexan (solo eso)
-├── data/                  preguntas de prueba y otros datos del proyecto
 ├── tests/                 pruebas unitarias y de integración (sin llamar a APIs pagadas)
+├── data/                  DATOS
+│   ├── documentos/        documentos fuente que se indexan (solo eso)
+│   ├── preguntas_prueba.csv
+│   └── ejemplo/           datos ficticios para probar sin datos reales (opcional)
+├── docs/                  DOCUMENTACIÓN del proyecto (índice en docs/README.md)
+│   ├── planificacion/     plan, cronograma, presupuesto
+│   ├── arquitectura/      diagramas
+│   └── referencias/       guías y material de apoyo (como esta guía)
+├── harness/               seguimiento del agente de IA (opcional): feature_list.json, progress.md, init.sh…
 ├── logs/                  registros de ejecución y de consultas (no van a git)
 └── <vectordb>/            base vectorial generada (no va a git)
 ```
@@ -106,7 +113,7 @@ Así se puede cambiar el canal (WhatsApp → web), la base (ChromaDB → FAISS) 
 Un solo archivo con subcomandos, siempre ejecutado desde la raíz:
 
 ```bash
-python main.py ingestar                # docs/ → base vectorial
+python main.py ingestar                # data/documentos/ → base vectorial
 python main.py probar-busqueda         # evaluación de la búsqueda
 python main.py preguntar "¿...?"       # una pregunta; sin texto = conversación
 python main.py preguntar --csv data/preguntas_prueba.csv
@@ -139,7 +146,9 @@ def funcion():
 
 ## 7. Datos, logs y archivos generados
 
-- `docs/`: solo documentos a indexar. Todo lo que haya ahí se ingesta.
+- **Cuatro zonas en la raíz**: código (`src/`, `tests/`, `main.py`), datos (`data/`), documentación (`docs/`) y, si se trabaja con un agente de IA, su seguimiento (`harness/`). En la raíz solo quedan `README.md`, `main.py` y la configuración (`config.yaml`, `requirements.txt`, `.env.example`, `.gitignore`, `pytest.ini`), más `CLAUDE.md`/`AGENTS.md` si el agente lo exige ahí.
+- `docs/` es **documentación**, como en el resto de proyectos de software; nunca datos que se ingestan.
+- `data/documentos/`: solo documentos a indexar. Todo lo que haya ahí se ingesta.
 - `data/preguntas_prueba.csv`: columnas `pregunta,respuesta_esperada,fuente_esperada` (fuente vacía = la respuesta no está en los documentos; sirve para probar el "no sé").
 - `logs/`: un `.gitkeep` en git; los `.log` y `.csv` de consultas se ignoran (pueden tener datos de clientes; anonimizar teléfonos o correos).
 - La base vectorial (`chroma_db/`, índices FAISS…) se genera con `python main.py ingestar` y no va a git.

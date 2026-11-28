@@ -2,7 +2,7 @@
 # Las rutas son relativas a la raíz del proyecto.
 
 rutas:
-  docs: docs                          # documentos del negocio (se ingesta todo)
+  documentos: data/documentos         # documentos del negocio (se ingesta todo)
   chroma: chroma_db                   # base vectorial generada
   preguntas: data/preguntas_prueba.csv
   logs: logs

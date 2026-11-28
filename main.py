@@ -2,12 +2,12 @@
 
 Uso:
     python main.py ingestar                              # docs/ -> chroma_db/
-    python main.py ingestar --docs ejemplo/docs          # con el negocio de ejemplo
+    python main.py ingestar --docs data/ejemplo/documentos   # con el negocio de ejemplo
     python main.py probar-busqueda                       # data/preguntas_prueba.csv
-    python main.py probar-busqueda --preguntas ejemplo/preguntas_prueba.csv
+    python main.py probar-busqueda --preguntas data/ejemplo/preguntas_prueba.csv
     python main.py preguntar "¿A qué hora abren?"        # una pregunta
     python main.py preguntar                             # conversación
-    python main.py preguntar --csv ejemplo/preguntas_prueba.csv
+    python main.py preguntar --csv data/ejemplo/preguntas_prueba.csv
 
 Servidor (Fase 3): uvicorn src.api.routes:app
 
@@ -63,7 +63,7 @@ def cmd_probar_busqueda(args: argparse.Namespace) -> int:
         # 2.1 Leer las preguntas
         filas = leer_preguntas(args.preguntas)
         if not filas:
-            print(f"ERROR: {mostrar(args.preguntas)} no tiene preguntas. Complétalo o usa --preguntas ejemplo/preguntas_prueba.csv")
+            print(f"ERROR: {mostrar(args.preguntas)} no tiene preguntas. Complétalo o usa --preguntas data/ejemplo/preguntas_prueba.csv")
             return 1
         # 2.2 Buscar cada pregunta
         resultados = evaluar(filas, abrir_base(), args.k)
@@ -129,7 +129,7 @@ def crear_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="comando", required=True)
 
     p = sub.add_parser("ingestar", help="carga los documentos en ChromaDB")
-    p.add_argument("--docs", type=Path, default=ruta("docs"), help="carpeta de documentos (por defecto: docs)")
+    p.add_argument("--docs", type=Path, default=ruta("documentos"), help="carpeta de documentos (por defecto: data/documentos)")
     p.add_argument("--destino", type=Path, default=ruta("chroma"), help="carpeta de ChromaDB (por defecto: chroma_db)")
     p.add_argument("--chunk-size", type=int, default=CHUNK_SIZE)
     p.add_argument("--overlap", type=int, default=CHUNK_OVERLAP)

@@ -2,7 +2,7 @@
 
 ## Estado actual (Current State)
 
-**Última actualización (Last Updated):** 2026-11-26
+**Última actualización (Last Updated):** 2026-11-28
 **Funcionalidad activa:** feat-002 - Fase 2 – Cadena RAG (hecha con el negocio de ejemplo; falta validar con datos reales). feat-000 sigue en curso con Jenner
 
 ## Estado
@@ -13,24 +13,24 @@
 - [x] Harness instalado: CLAUDE.md, feature_list.json, progress.md, session-handoff.md, init.sh
 - [x] Skill harness-creator instalada en .claude/skills/
 - [x] Repo en GitHub: https://github.com/jportillacabello-dot/PRY-CHATBOT-WSP (rama main)
-- [x] Carpetas docs/, data/, diagramas/
+- [x] Carpetas: src/ y tests/ (código), data/ (documentos/, preguntas, ejemplo/), docs/ (planificacion/, arquitectura/, referencias/), harness/
 - [x] requirements.txt (con python-multipart, docx2txt y pytest), .gitignore, .env.example
 - [x] .venv con dependencias instaladas
 - [x] Plantilla data/preguntas_prueba.csv (columnas pregunta,respuesta_esperada,fuente_esperada)
-- [x] Diagrama de pipeline con guardrails: diagramas/arquitectura-pipeline.html (hecho con referencias/diagramas/)
-- [x] Negocio de ejemplo (ficticio) en ejemplo/: docs (faq.md, politicas.txt, carta.pdf) y 20 preguntas
+- [x] Diagrama de pipeline con guardrails: docs/arquitectura/arquitectura-pipeline.html (hecho con docs/referencias/diagramas/)
+- [x] Negocio de ejemplo (ficticio) en data/ejemplo/: documentos/ (faq.md, politicas.txt, carta.pdf) y 20 preguntas
 - [x] ingesta.py: carga PDF/Word/TXT/MD, limpia encabezados y pies, trocea (800/100), guarda en ChromaDB con distancia coseno; reconstruye la colección en cada corrida
 - [x] tests/test_ingesta.py: 9 tests con embeddings falsos (sin costo)
 - [x] probar_busqueda.py (tarea 1.3): % de fuente correcta en top-k, rangos de distancia y umbral sugerido; sale con código 1 si no llega a 90 %
 - [x] prompt.txt (reglas) y rag.py: responder(pregunta) -> str, responder_con_detalle() para evaluar, umbral de relevancia, CLI con --csv
 - [x] tests/test_rag.py y tests/test_capas.py: 22 tests en total con LLM y embeddings falsos
-- [x] Guía general reutilizable: referencias/estructura-proyecto-rag.md
+- [x] Guía general reutilizable: docs/referencias/estructura-proyecto-rag.md (copia global en ~/.claude/instrucciones/)
 - [x] Estructura por carpetas aplicada: main.py, config.yaml, src/{ingestion,chunking,embeddings,vectordb,retrieval,prompts,llm,pipeline,evaluation,api,utils}, logs/. 48 tests OK; mismo resultado con OpenAI (18/18 búsqueda, 20/20 respuestas, máximo 3.3 s)
 
 ### Qué está en curso (What's In Progress)
 
 - [ ] Fase 0 – Preparación (Jenner, 26–27 nov)
-  - Falta: elegir el negocio, documentos en docs/, las 20 preguntas, activar el Sandbox de WhatsApp, ngrok y la cuenta de Render
+  - Falta: elegir el negocio, documentos en data/documentos/, las 20 preguntas, activar el Sandbox de WhatsApp, ngrok y la cuenta de Render
   - Hecho: cuenta de Twilio (Trial) activa; TWILIO_ACCOUNT_SID y TWILIO_AUTH_TOKEN en .env y verificados contra la API (26-nov)
 - [ ] Fases 1 y 2 (Jhonatan): código terminado y validado con el ejemplo
   - Falta: con los documentos reales, correr `python main.py ingestar`, `python main.py probar-busqueda` (ajustar `retrieval.umbral_distancia` en config.yaml) y `python main.py preguntar --csv data/preguntas_prueba.csv` (meta ≥ 18/20, dos corridas)
@@ -53,11 +53,11 @@
 
 - **Harness con CLAUDE.md**: el proyecto se trabaja con Claude Code
 - **Fase 3 depende solo de Fase 0** en feature_list.json, para que Jenner trabaje en paralelo con una respuesta fija
-- **Estructura por carpetas (reemplaza la estructura plana anterior)**: se sigue `referencias/estructura-proyecto-rag.md`. Una carpeta por responsabilidad en `src/`, valores en `config.yaml`, entrada única `main.py`, dependencias verificadas por `tests/test_capas.py`. Equivalencias con evidencias anteriores: `ingesta.py` → `main.py ingestar`; `probar_busqueda.py` → `main.py probar-busqueda`; `rag.py --csv` → `main.py preguntar --csv`; `prompt.txt` → `src/prompts/system_prompt.txt`; `app.py` → `src/api/routes.py`; log → `logs/log_preguntas.csv`
-- **Diagramas fuera de docs/**: `docs/` solo tiene documentos del negocio porque la ingesta lee todo lo que hay ahí
-- **harness-kit/ fuera de git** (en referencias/harness-kit/): la skill instalada ya está en `.claude/skills/`
-- **Material de referencia junto en referencias/**: guía RAG, plantilla de diagramas y harness-kit
-- **Fase 1 adelantada con datos de ejemplo**: el negocio ficticio de `ejemplo/` permite construir y probar la ingesta sin esperar la tarea 0.1
+- **Estructura por carpetas (reemplaza la estructura plana anterior)**: se sigue `docs/referencias/estructura-proyecto-rag.md`. Una carpeta por responsabilidad en `src/`, valores en `config.yaml`, entrada única `main.py`, dependencias verificadas por `tests/test_capas.py`. Equivalencias con evidencias anteriores: `ingesta.py` → `main.py ingestar`; `probar_busqueda.py` → `main.py probar-busqueda`; `rag.py --csv` → `main.py preguntar --csv`; `prompt.txt` → `src/prompts/system_prompt.txt`; `app.py` → `src/api/routes.py`; log → `logs/log_preguntas.csv`
+- **Separación código / datos / documentación / harness (28-nov)**: `src/` y `tests/` = código; `data/` = datos (los documentos del negocio pasaron de `docs/` a `data/documentos/`, y `ejemplo/` a `data/ejemplo/` con `documentos/`); `docs/` = documentación (`planificacion/`, `arquitectura/` antes `diagramas/`, `referencias/`); `harness/` = feature_list.json, progress.md, session-handoff.md, init.sh. CLAUDE.md sigue en la raíz porque Claude Code solo lo lee ahí. El validador local (`.claude/skills/.../harness-utils.mjs`) busca también en `harness/`. Basado en PyPA (src layout), Cookiecutter Data Science y Diátaxis. Las evidencias anteriores usan las rutas viejas
+- **harness-kit/ fuera de git** (en docs/referencias/harness-kit/): la skill instalada ya está en `.claude/skills/`
+- **Material de referencia junto en docs/referencias/**: guía RAG, plantilla de diagramas y harness-kit
+- **Fase 1 adelantada con datos de ejemplo**: el negocio ficticio de `data/ejemplo/` permite construir y probar la ingesta sin esperar la tarea 0.1
 - **Lectores propios (pypdf, docx2txt) en vez de los loaders de langchain-community**: ese paquete está en retiro; src/ingestion no lo usa
 - **Una sola cuenta de Twilio para los dos** (la que está en .env). Render: también una sola cuenta, recomendado que la cree Jenner (Fase 5); despliega solo con cada push a main. Nunca compartir contraseñas, solo variables de entorno por canal seguro
 - **Responsables actualizados en el Excel (26-nov)**: pasos 0.2.1–0.2.3 y 0.3.1–0.3.3 a cargo de Jhonatan

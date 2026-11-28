@@ -15,7 +15,7 @@ from src.retrieval.retriever import K
 from src.vectordb.vector_store import abrir_base, construir_base
 
 RAIZ = Path(__file__).resolve().parent.parent
-EJEMPLO = RAIZ / "ejemplo"
+EJEMPLO = RAIZ / "data" / "ejemplo"
 
 
 class LLMEspia(FakeListChatModel):
@@ -31,7 +31,7 @@ class LLMEspia(FakeListChatModel):
 @pytest.fixture
 def base(tmp_path):
     embeddings = DeterministicFakeEmbedding(size=64)
-    construir_base(trocear(cargar_documentos(EJEMPLO / "docs")), embeddings, tmp_path / "db")
+    construir_base(trocear(cargar_documentos(EJEMPLO / "documentos")), embeddings, tmp_path / "db")
     return abrir_base(tmp_path / "db", embeddings)
 
 
