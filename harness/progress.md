@@ -38,9 +38,12 @@
 
 ### Qué sigue (What's Next)
 
-1. Avisar a Jenner que `responder(pregunta) -> str` ya existe en `src/pipeline/rag_pipeline.py`: su webhook va en `src/api/routes.py` (instrucciones en `src/api/__init__.py`) y se levanta con `uvicorn src.api.routes:app`. Las excepciones las captura api/
-2. Jenner: tarea 0.1 (negocio, documentos, 20 preguntas); al llegar, correr `python main.py ingestar`
-3. Jhonatan: invitar a Jenner como colaborador en GitHub y pasarle por canal seguro las variables de .env (OpenAI y Twilio)
+1. Jhonatan: invitar a Jenner como colaborador en GitHub (Settings → Collaborators) y revisar si el repo es público (tiene el Excel con horas y presupuesto)
+2. Jhonatan: pasarle a Jenner por canal seguro las variables de .env (OPENAI_API_KEY —idealmente una clave propia con límite de gasto— y las de Twilio, que es una cuenta compartida)
+3. Avisar a Jenner: su webhook va en `src/api/routes.py` (instrucciones en `src/api/__init__.py`), usa `responder()` de `src/pipeline/rag_pipeline.py`, se levanta con `uvicorn src.api.routes:app`; los documentos reales van en `data/documentos/`; la portada con instalación es el README raíz
+4. Jenner: tarea 0.1 (negocio, documentos en data/documentos/, 20 preguntas en data/preguntas_prueba.csv con fuente_esperada) y activar el Sandbox de WhatsApp en Twilio
+5. Jhonatan, cuando lleguen los datos: `python main.py ingestar` → `python main.py probar-busqueda` (ajustar umbral en config.yaml) → `python main.py preguntar --csv data/preguntas_prueba.csv` dos veces (meta ≥ 18/20) y actualizar el % en el Excel
+6. Opcional mientras tanto (Jhonatan): evaluador automático de respuestas (`src/evaluation/answer_eval.py` + `python main.py evaluar`) para las tareas 2.3, 4.3 y 5.3
 
 ## Bloqueos / Riesgos (Blockers / Risks)
 
@@ -100,4 +103,8 @@ Pendientes (feat-007 en harness/feature_list.json, al final del MVP):
 
 ## Notas para la siguiente sesión (Next Session)
 
-.env ya existe y chroma_db/ está cargada con el ejemplo. El código de Jhonatan (Fases 1 y 2) está listo; falta validarlo con los datos reales de la tarea 0.1. Mientras tanto, se puede adelantar el evaluador automático de respuestas (src/evaluation/answer_eval.py + `python main.py evaluar`) para las Fases 2.3, 4.3 y 5.3, y un README.md en la raíz para Jenner.
+- Estado al 28-nov: avance total 37 % (Excel, ponderado por horas). Fases 1 y 2 con código terminado y probado con el negocio de ejemplo; todo bloqueado por la tarea 0.1 de Jenner.
+- .env tiene OPENAI_API_KEY y Twilio (verificado); chroma_db/ está cargada con el ejemplo (data/ejemplo/documentos).
+- Verificación: `bash harness/init.sh` (48 tests), auditoría `node .claude/skills/harness-creator/scripts/validate-harness.mjs --target .` = 100/100, CI de GitHub en verde.
+- El Excel del plan se edita con openpyxl y se recalcula con Excel por COM (PowerShell), siempre uno después del otro y cerrando Excel; si Excel está abierto por el usuario, el archivo queda bloqueado.
+- Ver también harness/session-handoff.md (resumen de las sesiones del 26 y 28-nov).
