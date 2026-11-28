@@ -89,7 +89,7 @@ Distancias coseno del fragmento más cercano (ejemplo): preguntas válidas entre
 
 ## Mejoras pendientes para el final (comparación con laburen-ai-agent, 28-nov)
 
-Hechas el 28-nov: versiones fijas en requirements.txt y .python-version (3.11.9); diagrama visible en GitHub (docs/arquitectura/README.md + PNG); GitHub Action de tests (.github/workflows/tests.yml).
+Hechas el 28-nov: versiones fijas en requirements.txt y .python-version (3.11.9); diagrama visible en GitHub (docs/arquitectura/README.md + PNG); GitHub Action de tests (.github/workflows/tests.yml): en verde desde el commit 703d491 (40 s). En CI se usa "la última 3.11" porque GitHub no publica 3.11.9 para Ubuntu 26.04; .python-version (3.11.9) queda para Render y local.
 
 Pendientes (feat-007 en harness/feature_list.json, al final del MVP):
 - [ ] GET /health en src/api/ (y endpoint de prueba solo protegido o desactivado en producción) — Jenner
