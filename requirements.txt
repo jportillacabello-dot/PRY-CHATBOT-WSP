@@ -1,15 +1,27 @@
-fastapi
-uvicorn
-python-multipart
-twilio
-langchain
-langchain-openai
-langchain-chroma
-langchain-community
-chromadb
-openai
-python-dotenv
-pyyaml
-pypdf
-docx2txt
-pytest
+# Versiones fijas: las mismas con las que pasan los tests (28-nov-2026).
+# Para actualizar: cambiar la versión, correr `python -m pytest` y subir solo si pasa.
+
+# API y canal (src/api/, Jenner)
+fastapi==0.165.0
+uvicorn==0.54.0
+python-multipart==0.0.34
+twilio==9.13.0
+
+# RAG (src/)
+langchain-core==1.8.5
+langchain-text-splitters==1.2.0
+langchain-openai==1.8.5
+langchain-chroma==1.2.0
+chromadb==1.5.9
+openai==3.60.0
+
+# Lectura de documentos (src/ingestion/)
+pypdf==7.1.1
+docx2txt==0.9
+
+# Configuración (src/utils/)
+python-dotenv==1.2.4
+PyYAML==6.0.4
+
+# Tests
+pytest==9.2.0

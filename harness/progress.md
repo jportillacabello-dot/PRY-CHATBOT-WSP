@@ -87,6 +87,17 @@ Distancias coseno del fragmento más cercano (ejemplo): preguntas válidas entre
 - No sirve para preguntas del mismo rubro que no están en los documentos (pizzas cae dentro del rango válido): eso lo debe cubrir el prompt ("si el contexto no lo dice, responde que no tienes esa información").
 - Recalibrar el umbral con los documentos y preguntas reales.
 
+## Mejoras pendientes para el final (comparación con laburen-ai-agent, 28-nov)
+
+Hechas el 28-nov: versiones fijas en requirements.txt y .python-version (3.11.9); diagrama visible en GitHub (docs/arquitectura/README.md + PNG); GitHub Action de tests (.github/workflows/tests.yml).
+
+Pendientes (feat-007 en harness/feature_list.json, al final del MVP):
+- [ ] GET /health en src/api/ (y endpoint de prueba solo protegido o desactivado en producción) — Jenner
+- [ ] Respaldo cuando OpenAI falla o tarda > 15 s: devolver el fragmento más relevante — Jhonatan
+- [ ] Procfile o render.yaml con arranque y ingesta al iniciar si falta chroma_db/ — Jenner
+- [ ] docs/despliegue-whatsapp.md y README con endpoints, demo y despliegue — Jenner
+- [ ] logging de Python en lugar de print — Jenner
+
 ## Notas para la siguiente sesión (Next Session)
 
 .env ya existe y chroma_db/ está cargada con el ejemplo. El código de Jhonatan (Fases 1 y 2) está listo; falta validarlo con los datos reales de la tarea 0.1. Mientras tanto, se puede adelantar el evaluador automático de respuestas (src/evaluation/answer_eval.py + `python main.py evaluar`) para las Fases 2.3, 4.3 y 5.3, y un README.md en la raíz para Jenner.

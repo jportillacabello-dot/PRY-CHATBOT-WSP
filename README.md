@@ -2,7 +2,9 @@
 
 Bot que responde por WhatsApp las consultas de los clientes de un negocio usando **solo** la información de sus documentos (RAG). Si la respuesta no está en los documentos, lo dice.
 
-**Flujo:** WhatsApp → Twilio → FastAPI (`src/api/`) → búsqueda en ChromaDB → gpt-5-mini → respuesta en TwiML.
+[![Tests](https://github.com/jportillacabello-dot/PRY-CHATBOT-WSP/actions/workflows/tests.yml/badge.svg)](https://github.com/jportillacabello-dot/PRY-CHATBOT-WSP/actions/workflows/tests.yml)
+
+**Flujo:** WhatsApp → Twilio → FastAPI (`src/api/`) → búsqueda en ChromaDB → gpt-5-mini → respuesta en TwiML. Diagrama completo con los guardrails: [docs/arquitectura](docs/arquitectura/README.md).
 
 ## Instalación
 
@@ -40,7 +42,9 @@ python main.py ingestar --docs data/ejemplo/documentos
 python main.py preguntar --csv data/ejemplo/preguntas_prueba.csv
 ```
 
-Tests: `python -m pytest` (no llaman a OpenAI).
+Tests: `python -m pytest` (no llaman a OpenAI). También corren solos en GitHub en cada push (pestaña *Actions*).
+
+Requiere Python 3.11 (ver `.python-version`). Las versiones de `requirements.txt` están fijas: para actualizar una, cámbiala, corre los tests y sube solo si pasan.
 
 ## Estructura
 

@@ -1,0 +1,30 @@
+# Corre los tests en cada push y pull request. No usa claves: los tests usan
+# embeddings y LLM falsos, así que no gastan saldo de OpenAI.
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Python (versión de .python-version)
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Revisar sintaxis
+        run: python -m compileall -q main.py src tests
+
+      - name: Correr tests
+        run: python -m pytest
